@@ -100,6 +100,7 @@ def run(args):
     yolo.predictor.custom_args = args
 
     for frame_idx, r in enumerate(results):
+        print(r.timestamp.now() - r.timestamp)
         if r.boxes.data.shape[1] == 7:
             if args.save_id_crops:
                 for d in r.boxes:
