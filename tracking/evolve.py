@@ -18,11 +18,11 @@ import yaml
 from ultralytics.utils.checks import check_requirements, print_args
 
 from boxmot.utils import EXAMPLES, ROOT, WEIGHTS, logger
-from tracking.val import run_trackeval
 from tracking.generate_mot_results import run_generate_mot_results
+from tracking.val import run_trackeval
 
 
-class Objective():
+class Objective:
     """Objective function to evolve best set of hyperparams for
 
     This object is passed to an objective function and provides interfaces to overwrite
@@ -41,6 +41,7 @@ class Objective():
         opts: the parsed script arguments
 
     """
+
     def __init__(self, opts):
         self.opt = opts
 
@@ -57,8 +58,7 @@ class Objective():
         d = {}
         self.opt.conf = trial.suggest_float("conf", 0.35, 0.55)
 
-        if self.opt.tracking_method == 'strongsort':
-
+        if self.opt.tracking_method == "strongsort":
             iou_thresh = trial.suggest_float("iou_thresh", 0.1, 0.4)
             ecc = trial.suggest_categorical("ecc", [True, False])
             ema_alpha = trial.suggest_float("ema_alpha", 0.7, 0.95)
@@ -71,44 +71,43 @@ class Objective():
             max_unmatched_preds = trial.suggest_categorical("max_unmatched_preds", [0])
 
             d = {
-                'ecc': ecc,
-                'mc_lambda': mc_lambda,
-                'ema_alpha': ema_alpha,
-                'max_dist': max_dist,
-                'max_iou_dist': max_iou_dist,
-                'max_unmatched_preds': max_unmatched_preds,
-                'max_age': max_age,
-                'n_init': n_init,
-                'nn_budget': nn_budget
+                "ecc": ecc,
+                "mc_lambda": mc_lambda,
+                "ema_alpha": ema_alpha,
+                "max_dist": max_dist,
+                "max_iou_dist": max_iou_dist,
+                "max_unmatched_preds": max_unmatched_preds,
+                "max_age": max_age,
+                "n_init": n_init,
+                "nn_budget": nn_budget,
             }
-        
-        elif self.opt.tracking_method == 'hybridsort':
+
+        elif self.opt.tracking_method == "hybridsort":
             det_thresh = trial.suggest_float("det_thresh", 0, 0.6)
-            max_age = trial.suggest_int("max_age",10,150,step=10)
-            min_hits = trial.suggest_int("min_hits",1,5,step=1)
+            max_age = trial.suggest_int("max_age", 10, 150, step=10)
+            min_hits = trial.suggest_int("min_hits", 1, 5, step=1)
             delta_t = trial.suggest_int("delta_t", 1, 5, step=1)
-            asso_func = trial.suggest_categorical("asso_func", ['iou', 'giou', 'diou'])
-            iou_thresh = trial.suggest_float("iou_thresh",0.1,0.4)
+            asso_func = trial.suggest_categorical("asso_func", ["iou", "giou", "diou"])
+            iou_thresh = trial.suggest_float("iou_thresh", 0.1, 0.4)
             inertia = trial.suggest_float("inertia", 0.1, 0.4)
             TCM_first_step_weight = trial.suggest_float("TCM_first_step_weight", 0, 0.5)
             longterm_reid_weight = trial.suggest_float("longterm_reid_weight", 0, 0.5)
             use_byte = trial.suggest_categorical("use_byte", [True, False])
-            
+
             d = {
-                'det_thresh': det_thresh,
-                'max_age': max_age,
-                'min_hits': min_hits,
-                'iou_thresh': iou_thresh,
-                'delta_t': delta_t,
-                'asso_func': asso_func,
-                'inertia': inertia,
-                'TCM_first_step_weight': TCM_first_step_weight,
-                'longterm_reid_weight': longterm_reid_weight,
-                'use_byte': use_byte
+                "det_thresh": det_thresh,
+                "max_age": max_age,
+                "min_hits": min_hits,
+                "iou_thresh": iou_thresh,
+                "delta_t": delta_t,
+                "asso_func": asso_func,
+                "inertia": inertia,
+                "TCM_first_step_weight": TCM_first_step_weight,
+                "longterm_reid_weight": longterm_reid_weight,
+                "use_byte": use_byte,
             }
 
-        elif self.opt.tracking_method == 'botsort':
-
+        elif self.opt.tracking_method == "botsort":
             track_high_thresh = trial.suggest_float("track_high_thresh", 0.3, 0.7)
             track_low_thresh = trial.suggest_float("track_low_thresh", 0.1, 0.3)
             new_track_thresh = trial.suggest_float("new_track_thresh", 0.1, 0.8)
@@ -116,66 +115,67 @@ class Objective():
             match_thresh = trial.suggest_float("match_thresh", 0.1, 0.9)
             proximity_thresh = trial.suggest_float("proximity_thresh", 0.25, 0.75)
             appearance_thresh = trial.suggest_float("appearance_thresh", 0.1, 0.8)
-            cmc_method = trial.suggest_categorical("cmc_method", ['sparseOptFlow'])
+            cmc_method = trial.suggest_categorical("cmc_method", ["sparseOptFlow"])
             frame_rate = trial.suggest_categorical("frame_rate", [30])
             lambda_ = trial.suggest_float("lambda_", 0.97, 0.995)
 
             d = {
-                'track_low_thresh': track_low_thresh,
-                'track_high_thresh': track_high_thresh,
-                'new_track_thresh': new_track_thresh,
-                'track_buffer': track_buffer,
-                'match_thresh': match_thresh,
-                'proximity_thresh': proximity_thresh,
-                'appearance_thresh': appearance_thresh,
-                'cmc_method': cmc_method,
-                'frame_rate': frame_rate,
-                'lambda_': lambda_
+                "track_low_thresh": track_low_thresh,
+                "track_high_thresh": track_high_thresh,
+                "new_track_thresh": new_track_thresh,
+                "track_buffer": track_buffer,
+                "match_thresh": match_thresh,
+                "proximity_thresh": proximity_thresh,
+                "appearance_thresh": appearance_thresh,
+                "cmc_method": cmc_method,
+                "frame_rate": frame_rate,
+                "lambda_": lambda_,
             }
 
-        elif self.opt.tracking_method == 'bytetrack':
-
+        elif self.opt.tracking_method == "bytetrack":
             track_thresh = trial.suggest_float("track_thresh", 0.4, 0.6)
             track_buffer = trial.suggest_int("track_buffer", 10, 60, step=10)
             match_thresh = trial.suggest_float("match_thresh", 0.7, 0.9)
 
             d = {
-                'track_thresh': track_thresh,
-                'match_thresh': match_thresh,
-                'track_buffer': track_buffer,
-                'frame_rate': 30
+                "track_thresh": track_thresh,
+                "match_thresh": match_thresh,
+                "track_buffer": track_buffer,
+                "frame_rate": 30,
             }
 
-        elif self.opt.tracking_method == 'ocsort':
-
+        elif self.opt.tracking_method == "ocsort":
             det_thresh = trial.suggest_float("det_thresh", 0, 0.6)
             max_age = trial.suggest_int("max_age", 10, 60, step=10)
             min_hits = trial.suggest_int("min_hits", 1, 5, step=1)
             iou_thresh = trial.suggest_float("iou_thresh", 0.1, 0.4)
             delta_t = trial.suggest_int("delta_t", 1, 5, step=1)
-            asso_func = trial.suggest_categorical("asso_func", ['iou', 'giou', 'centroid'])
+            asso_func = trial.suggest_categorical(
+                "asso_func", ["iou", "giou", "centroid"]
+            )
             inertia = trial.suggest_float("inertia", 0.1, 0.4)
             use_byte = trial.suggest_categorical("use_byte", [True, False])
 
             d = {
-                'det_thresh': det_thresh,
-                'max_age': max_age,
-                'min_hits': min_hits,
-                'iou_thresh': iou_thresh,
-                'delta_t': delta_t,
-                'asso_func': asso_func,
-                'inertia': inertia,
-                'use_byte': use_byte
+                "det_thresh": det_thresh,
+                "max_age": max_age,
+                "min_hits": min_hits,
+                "iou_thresh": iou_thresh,
+                "delta_t": delta_t,
+                "asso_func": asso_func,
+                "inertia": inertia,
+                "use_byte": use_byte,
             }
 
-        elif self.opt.tracking_method == 'deepocsort':
-
+        elif self.opt.tracking_method == "deepocsort":
             det_thresh = trial.suggest_int("det_thresh", 0.3, 0.6)
             max_age = trial.suggest_int("max_age", 10, 60, step=10)
             min_hits = trial.suggest_int("min_hits", 1, 5, step=1)
             iou_thresh = trial.suggest_float("iou_thresh", 0.1, 0.4)
             delta_t = trial.suggest_int("delta_t", 1, 5, step=1)
-            asso_func = trial.suggest_categorical("asso_func", ['iou', 'giou', 'centroid'])
+            asso_func = trial.suggest_categorical(
+                "asso_func", ["iou", "giou", "centroid"]
+            )
             inertia = trial.suggest_float("inertia", 0.1, 0.4)
             w_association_emb = trial.suggest_float("w_association_emb", 0.5, 0.9)
             alpha_fixed_emb = trial.suggest_float("alpha_fixed_emb", 0.9, 0.999)
@@ -186,25 +186,25 @@ class Objective():
             new_kf_off = trial.suggest_categorical("new_kf_off", [True, False])
 
             d = {
-                'det_thresh': det_thresh,
-                'max_age': max_age,
-                'min_hits': min_hits,
-                'iou_thresh': iou_thresh,
-                'delta_t': delta_t,
-                'asso_func': asso_func,
-                'inertia': inertia,
-                'w_association_emb': w_association_emb,
-                'alpha_fixed_emb': alpha_fixed_emb,
-                'aw_param': aw_param,
-                'embedding_off': embedding_off,
-                'cmc_off': cmc_off,
-                'aw_off': aw_off,
-                'new_kf_off': new_kf_off
+                "det_thresh": det_thresh,
+                "max_age": max_age,
+                "min_hits": min_hits,
+                "iou_thresh": iou_thresh,
+                "delta_t": delta_t,
+                "asso_func": asso_func,
+                "inertia": inertia,
+                "w_association_emb": w_association_emb,
+                "alpha_fixed_emb": alpha_fixed_emb,
+                "aw_param": aw_param,
+                "embedding_off": embedding_off,
+                "cmc_off": cmc_off,
+                "aw_off": aw_off,
+                "new_kf_off": new_kf_off,
             }
 
         # overwrite existing config for tracker
         logger.info("Writing newly generated config for trial")
-        with open(self.opt.tracking_config, 'w') as f:
+        with open(self.opt.tracking_config, "w") as f:
             yaml.dump(d, f)
 
     def __call__(self, trial):
@@ -263,7 +263,9 @@ def save_plots(opt, study, objectives):
 
     for i, ob in enumerate(objectives):
         if not opt.n_trials <= 1:  # more than one trial needed for parameter importance
-            fig = optuna.visualization.plot_param_importances(study, target=lambda t: t.values[i], target_name=ob)
+            fig = optuna.visualization.plot_param_importances(
+                study, target=lambda t: t.values[i], target_name=ob
+            )
             fig.write_html(f"{ob}_param_importances_" + opt.tracking_method + ".html")
 
 
@@ -280,64 +282,118 @@ def write_best_HOTA_params_to_config(opt, study):
     """
     trial_with_highest_HOTA = max(study.best_trials, key=lambda t: t.values[0])
     d = trial_with_highest_HOTA.params
-    with open(opt.tracking_config, 'w') as f:
-        f.write(f'# Trial number:      {trial_with_highest_HOTA.number}\n')
-        f.write(f'# HOTA, MOTA, IDF1:  {trial_with_highest_HOTA.values}\n')
+    with open(opt.tracking_config, "w") as f:
+        f.write(f"# Trial number:      {trial_with_highest_HOTA.number}\n")
+        f.write(f"# HOTA, MOTA, IDF1:  {trial_with_highest_HOTA.values}\n")
         yaml.dump(d, f)
 
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--yolo-model', type=str, default=WEIGHTS / 'yolov8n.pt',
-                        help='model.pt path(s)')
-    parser.add_argument('--reid-model', type=str, default=WEIGHTS / 'osnet_x0_25_msmt17.pt')
-    parser.add_argument('--tracking-method', type=str, default='deepocsort',
-                        help='strongsort, ocsort, bytetrack, deepocsort, botsort')
-    parser.add_argument('--project', default=ROOT / 'runs' / 'mot',
-                        help='save results to project/name')
-    parser.add_argument('--name', default='yolov8n_osnet_x0_25_msmt17',
-                        help='save results to project/name')
-    parser.add_argument('--dets', type=str, default='yolov8n',
-                        help='the folder name under project to load the detections from')
-    parser.add_argument('--embs', type=str, default='osnet_x0_25_msmt17',
-                        help='the folder name under project/dets to load the embeddings from')
+    parser.add_argument(
+        "--yolo-model",
+        type=str,
+        default=WEIGHTS / "yolov8n.pt",
+        help="model.pt path(s)",
+    )
+    parser.add_argument(
+        "--reid-model", type=str, default=WEIGHTS / "osnet_x0_25_msmt17.pt"
+    )
+    parser.add_argument(
+        "--tracking-method",
+        type=str,
+        default="deepocsort",
+        help="strongsort, ocsort, bytetrack, deepocsort, botsort",
+    )
+    parser.add_argument(
+        "--project", default=ROOT / "runs" / "mot", help="save results to project/name"
+    )
+    parser.add_argument(
+        "--name",
+        default="yolov8n_osnet_x0_25_msmt17",
+        help="save results to project/name",
+    )
+    parser.add_argument(
+        "--dets",
+        type=str,
+        default="yolov8n",
+        help="the folder name under project to load the detections from",
+    )
+    parser.add_argument(
+        "--embs",
+        type=str,
+        default="osnet_x0_25_msmt17",
+        help="the folder name under project/dets to load the embeddings from",
+    )
 
-    parser.add_argument('--classes', nargs='+', type=str, default=['0'],
-                        help='filter by class: --classes 0, or --classes 0 2 3')
-    parser.add_argument('--exist-ok', action='store_true', default=False,
-                        help='existing project/name ok, do not increment')
-    parser.add_argument('--benchmark', type=str, default='MOT17',
-                        help='MOT16, MOT17, MOT20')
-    parser.add_argument('--split', type=str, default='train',
-                        help='existing project/name ok, do not increment')
-    parser.add_argument('--eval-existing', type=str, default='',
-                        help='evaluate existing tracker results under mot_callenge/MOTXX-YY/...')
-    parser.add_argument('--conf', type=float, default=0.45,
-                        help='confidence threshold')
-    parser.add_argument('--imgsz', '--img-size', nargs='+', type=int, default=[1280],
-                        help='inference size h,w')
-    parser.add_argument('--gsi', action='store_true',
-                        help='apply gsi to results')
-    parser.add_argument('--device', default='',
-                        help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--n-trials', type=int, default=4,
-                        help='nr of trials for evolution')
-    parser.add_argument('--resume', action='store_true',
-                        help='resume hparam search')
-    parser.add_argument('--save', action='store_true',
-                        help='save video tracking results')
-    parser.add_argument('--processes-per-device', type=int, default=2,
-                        help='how many subprocesses can be invoked per GPU (to manage memory consumption)')
-    parser.add_argument('--objectives', type=str, default='HOTA,MOTA,IDF1',
-                        help='set of objective metrics: HOTA,MOTA,IDF1')
+    parser.add_argument(
+        "--classes",
+        nargs="+",
+        type=str,
+        default=["0"],
+        help="filter by class: --classes 0, or --classes 0 2 3",
+    )
+    parser.add_argument(
+        "--exist-ok",
+        action="store_true",
+        default=False,
+        help="existing project/name ok, do not increment",
+    )
+    parser.add_argument(
+        "--benchmark", type=str, default="MOT17", help="MOT16, MOT17, MOT20"
+    )
+    parser.add_argument(
+        "--split",
+        type=str,
+        default="train",
+        help="existing project/name ok, do not increment",
+    )
+    parser.add_argument(
+        "--eval-existing",
+        type=str,
+        default="",
+        help="evaluate existing tracker results under mot_callenge/MOTXX-YY/...",
+    )
+    parser.add_argument("--conf", type=float, default=0.45, help="confidence threshold")
+    parser.add_argument(
+        "--imgsz",
+        "--img-size",
+        nargs="+",
+        type=int,
+        default=[1280],
+        help="inference size h,w",
+    )
+    parser.add_argument("--gsi", action="store_true", help="apply gsi to results")
+    parser.add_argument(
+        "--device", default="", help="cuda device, i.e. 0 or 0,1,2,3 or cpu"
+    )
+    parser.add_argument(
+        "--n-trials", type=int, default=4, help="nr of trials for evolution"
+    )
+    parser.add_argument("--resume", action="store_true", help="resume hparam search")
+    parser.add_argument(
+        "--save", action="store_true", help="save video tracking results"
+    )
+    parser.add_argument(
+        "--processes-per-device",
+        type=int,
+        default=2,
+        help="how many subprocesses can be invoked per GPU (to manage memory consumption)",
+    )
+    parser.add_argument(
+        "--objectives",
+        type=str,
+        default="HOTA,MOTA,IDF1",
+        help="set of objective metrics: HOTA,MOTA,IDF1",
+    )
 
     opt = parser.parse_args()
-    opt.tracking_config = ROOT / 'boxmot' / 'configs' / (opt.tracking_method + '.yaml')
+    opt.tracking_config = ROOT / "boxmot" / "configs" / (opt.tracking_method + ".yaml")
     opt.objectives = opt.objectives.split(",")
 
     device = []
 
-    for a in opt.device.split(','):
+    for a in opt.device.split(","):
         try:
             a = int(a)
         except ValueError:
@@ -358,6 +414,7 @@ class ContinuousStudySave:
     Attributes:
         tracking_method: the tracking method name
     """
+
     def __init__(self, tracking_method):
         self.tracking_method = tracking_method
 
@@ -367,7 +424,7 @@ class ContinuousStudySave:
 
 if __name__ == "__main__":
     opt = parse_opt()
-    check_requirements(('optuna', 'plotly', 'kaleido', 'joblib', 'pycocotools'))
+    check_requirements(("optuna", "plotly", "kaleido", "joblib", "pycocotools"))
     import joblib
     import optuna
 
@@ -377,14 +434,16 @@ if __name__ == "__main__":
     else:
         # A fast and elitist multiobjective genetic algorithm: NSGA-II
         # https://ieeexplore.ieee.org/document/996017
-        study = optuna.create_study(directions=['maximize'] * len(opt.objectives))
+        study = optuna.create_study(directions=["maximize"] * len(opt.objectives))
         # first trial with params in yaml file, evolved for MOT17
-        with open(opt.tracking_config, 'r') as f:
+        with open(opt.tracking_config, "r") as f:
             params = yaml.load(f, Loader=yaml.loader.SafeLoader)
             study.enqueue_trial(params)
 
     continuous_study_save_cb = ContinuousStudySave(opt.tracking_method)
-    study.optimize(Objective(opt), n_trials=opt.n_trials, callbacks=[continuous_study_save_cb])
+    study.optimize(
+        Objective(opt), n_trials=opt.n_trials, callbacks=[continuous_study_save_cb]
+    )
 
     # write the parameters to the config file of the selected tracking method
     write_best_HOTA_params_to_config(opt, study)

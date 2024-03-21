@@ -5,6 +5,7 @@ import numpy as np
 import scipy
 import torch
 from scipy.spatial.distance import cdist
+
 from boxmot.utils.iou import iou_batch
 
 """
@@ -354,7 +355,7 @@ class NearestNeighborDistanceMetric(object):
         for feature, target in zip(features, targets):
             self.samples.setdefault(target, []).append(feature)
             if self.budget is not None:
-                self.samples[target] = self.samples[target][-self.budget:]
+                self.samples[target] = self.samples[target][-self.budget :]
         self.samples = {k: self.samples[k] for k in active_targets}
 
     def distance(self, features, targets):

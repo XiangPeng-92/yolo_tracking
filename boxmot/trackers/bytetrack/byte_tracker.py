@@ -159,9 +159,7 @@ class BYTETracker(object):
 
         if len(dets) > 0:
             """Detections"""
-            detections = [
-                STrack(det) for det in dets
-            ]
+            detections = [STrack(det) for det in dets]
         else:
             detections = []
 

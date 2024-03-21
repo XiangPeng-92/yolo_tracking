@@ -7,8 +7,7 @@ import numpy as np
 
 from boxmot.motion.kalman_filters.ocsort_kf import KalmanFilter
 from boxmot.utils.association import associate, linear_assignment
-from boxmot.utils.iou import get_asso_func
-from boxmot.utils.iou import run_asso_func
+from boxmot.utils.iou import get_asso_func, run_asso_func
 
 
 def k_previous_obs(observations, cur_age, k):
@@ -281,7 +280,15 @@ class OCSort(object):
             First round of association
         """
         matched, unmatched_dets, unmatched_trks = associate(
-            dets[:, 0:5], trks, self.asso_func, self.asso_threshold, velocities, k_observations, self.inertia, w, h
+            dets[:, 0:5],
+            trks,
+            self.asso_func,
+            self.asso_threshold,
+            velocities,
+            k_observations,
+            self.inertia,
+            w,
+            h,
         )
         for m in matched:
             self.trackers[m[1]].update(dets[m[0], :5], dets[m[0], 5], dets[m[0], 6])
@@ -309,7 +316,9 @@ class OCSort(object):
                     if iou_left[m[0], m[1]] < self.asso_threshold:
                         continue
                     self.trackers[trk_ind].update(
-                        dets_second[det_ind, :5], dets_second[det_ind, 5], dets_second[det_ind, 6]
+                        dets_second[det_ind, :5],
+                        dets_second[det_ind, 5],
+                        dets_second[det_ind, 6],
                     )
                     to_remove_trk_indices.append(trk_ind)
                 unmatched_trks = np.setdiff1d(
@@ -334,7 +343,9 @@ class OCSort(object):
                     det_ind, trk_ind = unmatched_dets[m[0]], unmatched_trks[m[1]]
                     if iou_left[m[0], m[1]] < self.asso_threshold:
                         continue
-                    self.trackers[trk_ind].update(dets[det_ind, :5], dets[det_ind, 5], dets[det_ind, 6])
+                    self.trackers[trk_ind].update(
+                        dets[det_ind, :5], dets[det_ind, 5], dets[det_ind, 6]
+                    )
                     to_remove_det_indices.append(det_ind)
                     to_remove_trk_indices.append(trk_ind)
                 unmatched_dets = np.setdiff1d(
@@ -349,7 +360,9 @@ class OCSort(object):
 
         # create and initialise new trackers for unmatched detections
         for i in unmatched_dets:
-            trk = KalmanBoxTracker(dets[i, :5], dets[i, 5], dets[i, 6], delta_t=self.delta_t)
+            trk = KalmanBoxTracker(
+                dets[i, :5], dets[i, 5], dets[i, 6], delta_t=self.delta_t
+            )
             self.trackers.append(trk)
         i = len(self.trackers)
         for trk in reversed(self.trackers):
@@ -366,9 +379,9 @@ class OCSort(object):
             ):
                 # +1 as MOT benchmark requires positive
                 ret.append(
-                    np.concatenate((d, [trk.id + 1], [trk.conf], [trk.cls], [trk.det_ind])).reshape(
-                        1, -1
-                    )
+                    np.concatenate(
+                        (d, [trk.id + 1], [trk.conf], [trk.cls], [trk.det_ind])
+                    ).reshape(1, -1)
                 )
             i -= 1
             # remove dead tracklet

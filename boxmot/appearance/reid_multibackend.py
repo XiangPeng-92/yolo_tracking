@@ -50,7 +50,9 @@ class ReIDDetectMultiBackend(nn.Module):
             self.xml,
             self.engine,
             self.tflite,
-        ) = self.model_type(w)  # get backend
+        ) = self.model_type(
+            w
+        )  # get backend
         self.fp16 = fp16
         self.fp16 &= self.pt or self.jit or self.engine  # FP16
         self.device = device
@@ -93,7 +95,12 @@ class ReIDDetectMultiBackend(nn.Module):
             LOGGER.info(f"Loading {w} for ONNX Runtime inference...")
             cuda = torch.cuda.is_available() and device.type != "cpu"
             # https://onnxruntime.ai/docs/reference/compatibility.html
-            tr.check_packages(("onnx", "onnxruntime-gpu==1.16.3" if cuda else "onnxruntime==1.16.3", ))
+            tr.check_packages(
+                (
+                    "onnx",
+                    "onnxruntime-gpu==1.16.3" if cuda else "onnxruntime==1.16.3",
+                )
+            )
             import onnxruntime
 
             providers = (
@@ -166,11 +173,14 @@ class ReIDDetectMultiBackend(nn.Module):
         elif self.tflite:
             LOGGER.info(f"Loading {w} for TensorFlow Lite inference...")
             import tensorflow as tf
+
             interpreter = tf.lite.Interpreter(model_path=str(w))
             try:
                 self.tf_lite_model = interpreter.get_signature_runner()
             except Exception as e:
-                LOGGER.error(f'{e}. If SignatureDef error. Export you model with the official onn2tf docker')
+                LOGGER.error(
+                    f"{e}. If SignatureDef error. Export you model with the official onn2tf docker"
+                )
                 exit()
         else:
             LOGGER.error("This model framework is not supported yet!")
@@ -191,7 +201,7 @@ class ReIDDetectMultiBackend(nn.Module):
         h, w = img.shape[:2]
         # dets are of different sizes so batch preprocessing is not possible
         for box in xyxys:
-            x1, y1, x2, y2 = box.astype('int')
+            x1, y1, x2, y2 = box.astype("int")
             x1 = max(0, x1)
             y1 = max(0, y1)
             x2 = min(w - 1, x2)
@@ -219,12 +229,13 @@ class ReIDDetectMultiBackend(nn.Module):
 
         crops = torch.stack(crops, dim=0)
         crops = torch.permute(crops, (0, 3, 1, 2))
-        crops = crops.to(dtype=torch.half if self.fp16 else torch.float, device=self.device)
+        crops = crops.to(
+            dtype=torch.half if self.fp16 else torch.float, device=self.device
+        )
 
         return crops
 
     def forward(self, im_batch):
-
         # batch to half
         if self.fp16 and im_batch.dtype != torch.float16:
             im_batch = im_batch.half()
@@ -248,10 +259,10 @@ class ReIDDetectMultiBackend(nn.Module):
         elif self.tflite:
             im_batch = im_batch.cpu().numpy()
             inputs = {
-                'images': im_batch,
+                "images": im_batch,
             }
             tf_lite_output = self.tf_lite_model(**inputs)
-            features = tf_lite_output['output']
+            features = tf_lite_output["output"]
 
         elif self.engine:  # TensorRT
             if True and im_batch.shape != self.bindings["images"].shape:
@@ -285,7 +296,9 @@ class ReIDDetectMultiBackend(nn.Module):
 
         if isinstance(features, (list, tuple)):
             return (
-                self.to_numpy(features[0]) if len(features) == 1 else [self.to_numpy(x) for x in features]
+                self.to_numpy(features[0])
+                if len(features) == 1
+                else [self.to_numpy(x) for x in features]
             )
         else:
             return self.to_numpy(features)

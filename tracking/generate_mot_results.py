@@ -1,30 +1,26 @@
 # Mikel Broström 🔥 Yolo Tracking 🧾 AGPL-3.0 license
 
 import argparse
-from pathlib import Path
-import numpy as np
-from functools import partial
 import json
-import torch
+from functools import partial
+from pathlib import Path
 
+import numpy as np
+import torch
 from tqdm import tqdm
+from ultralytics import YOLO
+from ultralytics.data.loaders import LoadImages
+from ultralytics.data.utils import VID_FORMATS
+from ultralytics.utils.files import increment_path
 
 from boxmot import TRACKERS
+from boxmot.appearance.reid_multibackend import ReIDDetectMultiBackend
 from boxmot.tracker_zoo import create_tracker
-
-from ultralytics.utils.files import increment_path
-from boxmot.utils import ROOT, WEIGHTS, TRACKER_CONFIGS
+from boxmot.utils import ROOT, TRACKER_CONFIGS, WEIGHTS
+from boxmot.utils import logger as LOGGER
 from boxmot.utils.checks import TestRequirements
 from tracking.detectors import get_yolo_inferer
-from boxmot.appearance.reid_multibackend import ReIDDetectMultiBackend
-from boxmot.utils import logger as LOGGER
-
-from ultralytics.data.loaders import LoadImages
-from ultralytics import YOLO
-from ultralytics.data.utils import VID_FORMATS
-
 from tracking.utils import convert_to_mot_format, write_mot_results
-
 
 __tr = TestRequirements()
 __tr.check_packages(
@@ -33,7 +29,6 @@ __tr.check_packages(
 
 
 def generate_mot_results(args):
-
     tracker = create_tracker(
         args.tracking_method,
         TRACKER_CONFIGS / (args.tracking_method + ".yaml"),
@@ -63,7 +58,6 @@ def generate_mot_results(args):
 
     txt_path = args.exp_folder_path / (Path(args.source).parent.name + ".txt")
     for frame_idx, d in enumerate(tqdm(dataset, desc="Frames")):
-
         # don't generate dets_n_emb for the last frame
         if (frame_idx + 1) == len(dataset):
             break

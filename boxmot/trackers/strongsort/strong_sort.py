@@ -25,9 +25,7 @@ class StrongSORT(object):
         ema_alpha=0.9,
     ):
         self.model = ReIDDetectMultiBackend(
-            weights=model_weights,
-            device=device,
-            fp16=fp16
+            weights=model_weights, device=device, fp16=fp16
         )
         self.tracker = Tracker(
             metric=NearestNeighborDistanceMetric("cosine", max_dist, nn_budget),
@@ -37,7 +35,7 @@ class StrongSORT(object):
             mc_lambda=mc_lambda,
             ema_alpha=ema_alpha,
         )
-        self.cmc = get_cmc_method('ecc')()
+        self.cmc = get_cmc_method("ecc")()
 
     def update(self, dets, img, embs=None):
         assert isinstance(
@@ -72,9 +70,10 @@ class StrongSORT(object):
 
         tlwh = xyxy2tlwh(xyxy)
         detections = [
-            Detection(box, conf, cls, det_ind, feat) for
-            box, conf, cls, det_ind, feat in
-            zip(tlwh, confs, clss, det_ind, features)
+            Detection(box, conf, cls, det_ind, feat)
+            for box, conf, cls, det_ind, feat in zip(
+                tlwh, confs, clss, det_ind, features
+            )
         ]
 
         # update tracker
@@ -95,7 +94,9 @@ class StrongSORT(object):
             det_ind = track.det_ind
 
             outputs.append(
-                np.concatenate(([x1, y1, x2, y2], [id], [conf], [cls], [det_ind])).reshape(1, -1)
+                np.concatenate(
+                    ([x1, y1, x2, y2], [id], [conf], [cls], [det_ind])
+                ).reshape(1, -1)
             )
         if len(outputs) > 0:
             return np.concatenate(outputs)

@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
 import pytest
+
 from boxmot.motion.cmc.ecc import ECC
 from boxmot.motion.cmc.orb import ORB
 from boxmot.motion.cmc.sift import SIFT
 from boxmot.motion.cmc.sof import SOF
-
 
 
 # Fixture for creating CMC objects
@@ -13,6 +13,7 @@ from boxmot.motion.cmc.sof import SOF
 def cmc_object(request):
     cmc_class = request.param
     return cmc_class()
+
 
 # Define the test function
 @pytest.mark.parametrize("cmc_object", [ECC, ORB, SIFT, SOF], indirect=True)
@@ -25,7 +26,9 @@ def test_cmc_apply(cmc_object):
     # Assert the type of result
     assert isinstance(result, np.ndarray)
 
+
 # Add more test functions as needed
+
 
 # Test preprocessing function
 @pytest.mark.parametrize("cmc_object", [ECC, ORB, SIFT, SOF], indirect=True)
@@ -35,6 +38,7 @@ def test_cmc_preprocess(cmc_object):
     processed_img = cmc_object.preprocess(img)
     # Assert the shape of the processed image, scale is 0.1 by default
     assert processed_img.shape == (10, 10)
+
 
 # Test apply function with empty detections
 @pytest.mark.parametrize("cmc_object", [ECC, ORB, SIFT, SOF], indirect=True)

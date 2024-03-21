@@ -1,15 +1,14 @@
 # Mikel Broström 🔥 Yolo Tracking 🧾 AGPL-3.0 license
 
+from abc import ABC, abstractmethod
 from pathlib import Path
 
 import numpy as np
 import torch
 from ultralytics.engine.results import Results
-from abc import ABC, abstractmethod
 
 
 class YoloInterface(ABC):
-
     @abstractmethod
     def __call__(self, im):
         pass
@@ -19,7 +18,6 @@ class YoloInterface(ABC):
         pass
 
     def get_scaling_factors(self, im, im0):
-
         # im to im0 factor for predictions
         im0_w = im0.shape[1]
         im0_h = im0.shape[0]
@@ -44,17 +42,12 @@ class YoloInterface(ABC):
         return preds
 
     def preds_to_yolov8_results(self, path, preds, im, im0s, names):
-        return Results(
-            path=path,
-            boxes=preds,
-            orig_img=im0s[0],
-            names=names
-        )
+        return Results(path=path, boxes=preds, orig_img=im0s[0], names=names)
 
     def get_model_from_weigths(self, l, model):
         model_type = None
         for key in l:
             if Path(key).stem in str(model.name):
-                model_type = str(Path(key).with_suffix(''))
+                model_type = str(Path(key).with_suffix(""))
                 break
         return model_type

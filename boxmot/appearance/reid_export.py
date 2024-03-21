@@ -14,12 +14,11 @@ from boxmot.appearance import export_formats
 from boxmot.appearance.backbones import build_model, get_nr_classes
 from boxmot.appearance.reid_model_factory import (get_model_name,
                                                   load_pretrained_weights)
+from boxmot.appearance.reid_multibackend import ReIDDetectMultiBackend
 from boxmot.utils import WEIGHTS
 from boxmot.utils import logger as LOGGER
 from boxmot.utils.checks import TestRequirements
 from boxmot.utils.torch_utils import select_device
-from boxmot.appearance.reid_multibackend import ReIDDetectMultiBackend
-
 
 __tr = TestRequirements()
 
@@ -137,8 +136,13 @@ def export_openvino(file, half):
 def export_tflite(file):
     try:
         __tr.check_packages(
-            ("onnx2tf>=1.15.4", "tensorflow", "onnx_graphsurgeon>=0.3.26", "sng4onnx>=1.0.1"),
-            cmds='--extra-index-url https://pypi.ngc.nvidia.com'
+            (
+                "onnx2tf>=1.15.4",
+                "tensorflow",
+                "onnx_graphsurgeon>=0.3.26",
+                "sng4onnx>=1.0.1",
+            ),
+            cmds="--extra-index-url https://pypi.ngc.nvidia.com",
         )  # requires openvino-dev: https://pypi.org/project/openvino-dev/
         import onnx2tf
 
@@ -292,11 +296,7 @@ if __name__ == "__main__":
             args.device.type != "cpu"
         ), "--half only compatible with GPU export, i.e. use --device 0"
 
-    ReIDDetectMultiBackend(
-        weights=args.weights,
-        device='cpu',
-        fp16=False
-    )
+    ReIDDetectMultiBackend(weights=args.weights, device="cpu", fp16=False)
 
     model = build_model(
         get_model_name(args.weights),

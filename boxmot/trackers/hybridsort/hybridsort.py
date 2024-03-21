@@ -38,8 +38,8 @@ def convert_bbox_to_z(bbox):
     """
     w = bbox[2] - bbox[0]
     h = bbox[3] - bbox[1]
-    x = bbox[0] + w / 2.
-    y = bbox[1] + h / 2.
+    x = bbox[0] + w / 2.0
+    y = bbox[1] + h / 2.0
     s = w * h  # scale is just area
     r = w / float(h + 1e-6)
     score = bbox[4]
@@ -58,9 +58,13 @@ def convert_x_to_bbox(x, score=None):
     h = x[2] / w
     score = x[3]
     if score is None:
-        return np.array([x[0] - w / 2., x[1] - h / 2., x[0] + w / 2., x[1] + h / 2.]).reshape((1, 4))
+        return np.array(
+            [x[0] - w / 2.0, x[1] - h / 2.0, x[0] + w / 2.0, x[1] + h / 2.0]
+        ).reshape((1, 4))
     else:
-        return np.array([x[0] - w / 2., x[1] - h / 2., x[0] + w / 2., x[1] + h / 2., score]).reshape((1, 5))
+        return np.array(
+            [x[0] - w / 2.0, x[1] - h / 2.0, x[0] + w / 2.0, x[1] + h / 2.0, score]
+        ).reshape((1, 5))
 
 
 def speed_direction(bbox1, bbox2):
@@ -83,7 +87,7 @@ def speed_direction_rt(bbox1, bbox2):
     cx1, cy1 = bbox1[0], bbox1[3]
     cx2, cy2 = bbox2[0], bbox2[3]
     speed = np.array([cy2 - cy1, cx2 - cx1])
-    norm = np.sqrt((cy2 - cy1)**2 + (cx2 - cx1) ** 2) + 1e-6
+    norm = np.sqrt((cy2 - cy1) ** 2 + (cx2 - cx1) ** 2) + 1e-6
     return speed / norm
 
 
@@ -99,7 +103,7 @@ def speed_direction_rb(bbox1, bbox2):
     cx1, cy1 = bbox1[2], bbox1[3]
     cx2, cy2 = bbox2[2], bbox2[3]
     speed = np.array([cy2 - cy1, cx2 - cx1])
-    norm = np.sqrt((cy2 - cy1)**2 + (cx2 - cx1) ** 2) + 1e-6
+    norm = np.sqrt((cy2 - cy1) ** 2 + (cx2 - cx1) ** 2) + 1e-6
     return speed / norm
 
 
@@ -107,6 +111,7 @@ class KalmanBoxTracker(object):
     """
     This class represents the internal state of individual tracked objects observed as bbox.
     """
+
     count = 0
 
     def __init__(
@@ -119,8 +124,8 @@ class KalmanBoxTracker(object):
         orig=False,
         buffer_size=30,
         longterm_bank_length=30,
-        alpha=0.8
-    ):     # 'temp_feat' and 'buffer_size' for reid feature
+        alpha=0.8,
+    ):  # 'temp_feat' and 'buffer_size' for reid feature
         """
         Initialises a tracker using initial bounding box.
 
@@ -128,27 +133,38 @@ class KalmanBoxTracker(object):
         # define constant velocity model
         # if not orig and not args.kalman_GPR:
         from boxmot.motion.kalman_filters.hybridsort_kf import KalmanFilter
+
         self.kf = KalmanFilter(dim_x=9, dim_z=5)
 
         # u, v, s, c, r, ~u, ~v, ~s, ~c
-        self.kf.F = np.array([[1, 0, 0, 0, 0, 1, 0, 0, 0],
-                              [0, 1, 0, 0, 0, 0, 1, 0, 0],
-                              [0, 0, 1, 0, 0, 0, 0, 1, 0],
-                              [0, 0, 0, 1, 0, 0, 0, 0, 1],
-                              [0, 0, 0, 0, 1, 0, 0, 0, 0],
-                              [0, 0, 0, 0, 0, 1, 0, 0, 0],
-                              [0, 0, 0, 0, 0, 0, 1, 0, 0],
-                              [0, 0, 0, 0, 0, 0, 0, 1, 0],
-                              [0, 0, 0, 0, 0, 0, 0, 0, 1]])
-        self.kf.H = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0],
-                              [0, 1, 0, 0, 0, 0, 0, 0, 0],
-                              [0, 0, 1, 0, 0, 0, 0, 0, 0],
-                              [0, 0, 0, 1, 0, 0, 0, 0, 0],
-                              [0, 0, 0, 0, 1, 0, 0, 0, 0]])
+        self.kf.F = np.array(
+            [
+                [1, 0, 0, 0, 0, 1, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 1, 0, 0],
+                [0, 0, 1, 0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 1, 0, 0, 0, 0, 1],
+                [0, 0, 0, 0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 1],
+            ]
+        )
+        self.kf.H = np.array(
+            [
+                [1, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 0, 0, 0, 0],
+            ]
+        )
 
-        self.kf.R[2:, 2:] *= 10.
-        self.kf.P[5:, 5:] *= 1000.  # give high uncertainty to the unobservable initial velocities
-        self.kf.P *= 10.
+        self.kf.R[2:, 2:] *= 10.0
+        self.kf.P[
+            5:, 5:
+        ] *= 1000.0  # give high uncertainty to the unobservable initial velocities
+        self.kf.P *= 10.0
         self.kf.Q[-1, -1] *= 0.01
         self.kf.Q[-2, -2] *= 0.01
         self.kf.Q[5:, 5:] *= 0.01
@@ -209,7 +225,9 @@ class KalmanBoxTracker(object):
                 cur_w = cur_w / sum_w
                 self.smooth_feat = pre_w * self.smooth_feat + cur_w * feat
             else:
-                self.smooth_feat = self.alpha * self.smooth_feat + (1 - self.alpha) * feat
+                self.smooth_feat = (
+                    self.alpha * self.smooth_feat + (1 - self.alpha) * feat
+                )
         self.features.append(feat)
         self.smooth_feat /= np.linalg.norm(self.smooth_feat)
 
@@ -297,12 +315,12 @@ class KalmanBoxTracker(object):
         """
         Advances the state vector and returns the predicted bounding box estimate.
         """
-        if ((self.kf.x[7] + self.kf.x[2]) <= 0):
+        if (self.kf.x[7] + self.kf.x[2]) <= 0:
             self.kf.x[7] *= 0.0
 
         self.kf.predict()
         self.age += 1
-        if (self.time_since_update > 0):
+        if self.time_since_update > 0:
             self.hit_streak = 0
         self.time_since_update += 1
         self.history.append(convert_x_to_bbox(self.kf.x))
@@ -310,13 +328,17 @@ class KalmanBoxTracker(object):
             return (
                 self.history[-1],
                 np.clip(self.kf.x[3], track_thresh, 1.0),
-                np.clip(self.confidence, 0.1, track_thresh)
+                np.clip(self.confidence, 0.1, track_thresh),
             )
         else:
             return (
                 self.history[-1],
                 np.clip(self.kf.x[3], track_thresh, 1.0),
-                np.clip(self.confidence - (self.confidence_pre - self.confidence), 0.1, track_thresh)
+                np.clip(
+                    self.confidence - (self.confidence_pre - self.confidence),
+                    0.1,
+                    track_thresh,
+                ),
             )
 
     def get_state(self):
@@ -327,8 +349,22 @@ class KalmanBoxTracker(object):
 
 
 class HybridSORT(object):
-    def __init__(self, reid_weights, device, half, det_thresh, max_age=30, min_hits=3,
-                 iou_threshold=0.3, delta_t=3, asso_func="iou", inertia=0.2, longterm_reid_weight=0, TCM_first_step_weight=0, use_byte=False):
+    def __init__(
+        self,
+        reid_weights,
+        device,
+        half,
+        det_thresh,
+        max_age=30,
+        min_hits=3,
+        iou_threshold=0.3,
+        delta_t=3,
+        asso_func="iou",
+        inertia=0.2,
+        longterm_reid_weight=0,
+        TCM_first_step_weight=0,
+        use_byte=False,
+    ):
         """
         Sets key parameters for SORT
         """
@@ -356,14 +392,14 @@ class HybridSORT(object):
         self.longterm_reid_correction_thresh_low = 0.4
         self.TCM_byte_step = True
         self.TCM_byte_step_weight = 1.0
-        self.dataset = 'dancetrack'
+        self.dataset = "dancetrack"
         self.ECC = False
         KalmanBoxTracker.count = 0
 
         self.model = ReIDDetectMultiBackend(
             weights=reid_weights, device=device, fp16=half
         )
-        self.cmc = get_cmc_method('ecc')()
+        self.cmc = get_cmc_method("ecc")()
 
     def camera_update(self, trackers, warp_matrix):
         for tracker in trackers:
@@ -396,7 +432,9 @@ class HybridSORT(object):
         dets = np.concatenate((bboxes, np.expand_dims(scores, axis=-1)), axis=1)
         inds_low = scores > self.low_thresh
         inds_high = scores < self.det_thresh
-        inds_second = np.logical_and(inds_low, inds_high)  # self.det_thresh > score > 0.1, for second matching
+        inds_second = np.logical_and(
+            inds_low, inds_high
+        )  # self.det_thresh > score > 0.1, for second matching
         dets_second = dets[inds_second]  # detections for second matching
         remain_inds = scores > self.det_thresh
         dets = dets[remain_inds]
@@ -408,7 +446,14 @@ class HybridSORT(object):
         ret = []
         for t, trk in enumerate(trks):
             pos, kalman_score, simple_score = self.trackers[t].predict()
-            trk[:6] = [pos[0][0], pos[0][1], pos[0][2], pos[0][3], kalman_score[0], simple_score]
+            trk[:6] = [
+                pos[0][0],
+                pos[0][1],
+                pos[0][2],
+                pos[0][3],
+                kalman_score[0],
+                simple_score,
+            ]
             if np.any(np.isnan(pos)):
                 to_del.append(t)
         trks = np.ma.compress_rows(np.ma.masked_invalid(trks))
@@ -416,52 +461,125 @@ class HybridSORT(object):
             self.trackers.pop(t)
 
         velocities_lt = np.array(
-            [trk.velocity_lt if trk.velocity_lt is not None else np.array((0, 0)) for trk in self.trackers])
+            [
+                trk.velocity_lt if trk.velocity_lt is not None else np.array((0, 0))
+                for trk in self.trackers
+            ]
+        )
         velocities_rt = np.array(
-            [trk.velocity_rt if trk.velocity_rt is not None else np.array((0, 0)) for trk in self.trackers])
+            [
+                trk.velocity_rt if trk.velocity_rt is not None else np.array((0, 0))
+                for trk in self.trackers
+            ]
+        )
         velocities_lb = np.array(
-            [trk.velocity_lb if trk.velocity_lb is not None else np.array((0, 0)) for trk in self.trackers])
+            [
+                trk.velocity_lb if trk.velocity_lb is not None else np.array((0, 0))
+                for trk in self.trackers
+            ]
+        )
         velocities_rb = np.array(
-            [trk.velocity_rb if trk.velocity_rb is not None else np.array((0, 0)) for trk in self.trackers])
+            [
+                trk.velocity_rb if trk.velocity_rb is not None else np.array((0, 0))
+                for trk in self.trackers
+            ]
+        )
         last_boxes = np.array([trk.last_observation for trk in self.trackers])
         k_observations = np.array(
-            [k_previous_obs(trk.observations, trk.age, self.delta_t) for trk in self.trackers])
+            [
+                k_previous_obs(trk.observations, trk.age, self.delta_t)
+                for trk in self.trackers
+            ]
+        )
 
         """
             First round of association
         """
         if self.EG_weight_high_score > 0 and self.TCM_first_step:
-            track_features = np.asarray([track.smooth_feat for track in self.trackers],
-                                        dtype=np.float64)
+            track_features = np.asarray(
+                [track.smooth_feat for track in self.trackers], dtype=np.float64
+            )
             emb_dists = embedding_distance(track_features, id_feature_keep).T
             if self.with_longterm_reid or self.with_longterm_reid_correction:
-                long_track_features = np.asarray([np.vstack(list(track.features)).mean(0) for track in self.trackers],
-                                                 dtype=np.float64)
+                long_track_features = np.asarray(
+                    [
+                        np.vstack(list(track.features)).mean(0)
+                        for track in self.trackers
+                    ],
+                    dtype=np.float64,
+                )
                 assert track_features.shape == long_track_features.shape
-                long_emb_dists = embedding_distance(long_track_features, id_feature_keep).T
+                long_emb_dists = embedding_distance(
+                    long_track_features, id_feature_keep
+                ).T
                 assert emb_dists.shape == long_emb_dists.shape
-                matched, unmatched_dets, unmatched_trks = associate_4_points_with_score_with_reid(
-                    dets, trks, self.iou_threshold, velocities_lt, velocities_rt, velocities_lb, velocities_rb,
-                    k_observations, self.inertia, self.TCM_first_step_weight, self.asso_func, emb_cost=emb_dists,
-                    weights=(1.0, self.EG_weight_high_score), thresh=self.high_score_matching_thresh,
-                    long_emb_dists=long_emb_dists, with_longterm_reid=self.with_longterm_reid,
+                (
+                    matched,
+                    unmatched_dets,
+                    unmatched_trks,
+                ) = associate_4_points_with_score_with_reid(
+                    dets,
+                    trks,
+                    self.iou_threshold,
+                    velocities_lt,
+                    velocities_rt,
+                    velocities_lb,
+                    velocities_rb,
+                    k_observations,
+                    self.inertia,
+                    self.TCM_first_step_weight,
+                    self.asso_func,
+                    emb_cost=emb_dists,
+                    weights=(1.0, self.EG_weight_high_score),
+                    thresh=self.high_score_matching_thresh,
+                    long_emb_dists=long_emb_dists,
+                    with_longterm_reid=self.with_longterm_reid,
                     longterm_reid_weight=self.longterm_reid_weight,
                     with_longterm_reid_correction=self.with_longterm_reid_correction,
                     longterm_reid_correction_thresh=self.longterm_reid_correction_thresh,
-                    dataset=self.dataset)
+                    dataset=self.dataset,
+                )
             else:
-                matched, unmatched_dets, unmatched_trks = associate_4_points_with_score_with_reid(
-                    dets, trks, self.iou_threshold, velocities_lt, velocities_rt, velocities_lb, velocities_rb,
-                    k_observations, self.inertia, self.TCM_first_step_weight, self.asso_func, emb_cost=emb_dists,
-                    weights=(1.0, self.EG_weight_high_score), thresh=self.high_score_matching_thresh)
+                (
+                    matched,
+                    unmatched_dets,
+                    unmatched_trks,
+                ) = associate_4_points_with_score_with_reid(
+                    dets,
+                    trks,
+                    self.iou_threshold,
+                    velocities_lt,
+                    velocities_rt,
+                    velocities_lb,
+                    velocities_rb,
+                    k_observations,
+                    self.inertia,
+                    self.TCM_first_step_weight,
+                    self.asso_func,
+                    emb_cost=emb_dists,
+                    weights=(1.0, self.EG_weight_high_score),
+                    thresh=self.high_score_matching_thresh,
+                )
         elif self.TCM_first_step:
             matched, unmatched_dets, unmatched_trks = associate_4_points_with_score(
-                dets, trks, self.iou_threshold, velocities_lt, velocities_rt, velocities_lb, velocities_rb,
-                k_observations, self.inertia, self.TCM_first_step_weight, self.asso_func)
+                dets,
+                trks,
+                self.iou_threshold,
+                velocities_lt,
+                velocities_rt,
+                velocities_lb,
+                velocities_rb,
+                k_observations,
+                self.inertia,
+                self.TCM_first_step_weight,
+                self.asso_func,
+            )
 
         # update with id feature
         for m in matched:
-            self.trackers[m[1]].update(dets[m[0], :], dets0[m[0], 5], dets0[m[0], 6], id_feature_keep[m[0], :])
+            self.trackers[m[1]].update(
+                dets[m[0], :], dets0[m[0], 5], dets0[m[0], 6], id_feature_keep[m[0], :]
+            )
 
         """
             Second round of associaton by OCR
@@ -474,28 +592,39 @@ class HybridSORT(object):
             iou_left = np.array(iou_left)
             if iou_left.max() > self.iou_threshold:
                 """
-                    NOTE: by using a lower threshold, e.g., self.iou_threshold - 0.1, you may
-                    get a higher performance especially on MOT17/MOT20 datasets. But we keep it
-                    uniform here for simplicity
+                NOTE: by using a lower threshold, e.g., self.iou_threshold - 0.1, you may
+                get a higher performance especially on MOT17/MOT20 datasets. But we keep it
+                uniform here for simplicity
                 """
                 if self.TCM_byte_step:
                     iou_left -= np.array(
-                        cal_score_dif_batch_two_score(dets_second, u_trks) * self.TCM_byte_step_weight
+                        cal_score_dif_batch_two_score(dets_second, u_trks)
+                        * self.TCM_byte_step_weight
                     )
                     iou_left_thre = iou_left
                 if self.EG_weight_low_score > 0:
-                    u_track_features = np.asarray([track.smooth_feat for track in u_tracklets], dtype=np.float64)
-                    emb_dists_low_score = embedding_distance(u_track_features, id_feature_second).T
-                    matched_indices = linear_assignment(-iou_left + self.EG_weight_low_score * emb_dists_low_score,
-                                                        )
+                    u_track_features = np.asarray(
+                        [track.smooth_feat for track in u_tracklets], dtype=np.float64
+                    )
+                    emb_dists_low_score = embedding_distance(
+                        u_track_features, id_feature_second
+                    ).T
+                    matched_indices = linear_assignment(
+                        -iou_left + self.EG_weight_low_score * emb_dists_low_score,
+                    )
                 else:
                     matched_indices = linear_assignment(-iou_left)
                 to_remove_trk_indices = []
                 for m in matched_indices:
                     det_ind, trk_ind = m[0], unmatched_trks[m[1]]
-                    if self.with_longterm_reid_correction and self.EG_weight_low_score > 0:
-                        if (iou_left_thre[m[0], m[1]] < self.iou_threshold) or \
-                           (emb_dists_low_score[m[0], m[1]] > self.longterm_reid_correction_thresh_low):
+                    if (
+                        self.with_longterm_reid_correction
+                        and self.EG_weight_low_score > 0
+                    ):
+                        if (iou_left_thre[m[0], m[1]] < self.iou_threshold) or (
+                            emb_dists_low_score[m[0], m[1]]
+                            > self.longterm_reid_correction_thresh_low
+                        ):
                             print("correction 2nd:", emb_dists_low_score[m[0], m[1]])
                             continue
                     else:
@@ -504,10 +633,12 @@ class HybridSORT(object):
                     self.trackers[trk_ind].update(
                         dets_second[det_ind, :],
                         id_feature_second[det_ind, :],
-                        update_feature=False
-                    )     # [hgx0523] do not update with id feature
+                        update_feature=False,
+                    )  # [hgx0523] do not update with id feature
                     to_remove_trk_indices.append(trk_ind)
-                unmatched_trks = np.setdiff1d(unmatched_trks, np.array(to_remove_trk_indices))
+                unmatched_trks = np.setdiff1d(
+                    unmatched_trks, np.array(to_remove_trk_indices)
+                )
 
         if unmatched_dets.shape[0] > 0 and unmatched_trks.shape[0] > 0:
             left_dets = dets[unmatched_dets]
@@ -518,9 +649,9 @@ class HybridSORT(object):
 
             if iou_left.max() > self.iou_threshold:
                 """
-                    NOTE: by using a lower threshold, e.g., self.iou_threshold - 0.1, you may
-                    get a higher performance especially on MOT17/MOT20 datasets. But we keep it
-                    uniform here for simplicity
+                NOTE: by using a lower threshold, e.g., self.iou_threshold - 0.1, you may
+                get a higher performance especially on MOT17/MOT20 datasets. But we keep it
+                uniform here for simplicity
                 """
                 rematched_indices = linear_assignment(-iou_left)
                 to_remove_det_indices = []
@@ -534,19 +665,29 @@ class HybridSORT(object):
                         dets0[det_ind, 5],
                         dets0[det_ind, 6],
                         id_feature_keep[det_ind, :],
-                        update_feature=False
+                        update_feature=False,
                     )
                     to_remove_det_indices.append(det_ind)
                     to_remove_trk_indices.append(trk_ind)
-                unmatched_dets = np.setdiff1d(unmatched_dets, np.array(to_remove_det_indices))
-                unmatched_trks = np.setdiff1d(unmatched_trks, np.array(to_remove_trk_indices))
+                unmatched_dets = np.setdiff1d(
+                    unmatched_dets, np.array(to_remove_det_indices)
+                )
+                unmatched_trks = np.setdiff1d(
+                    unmatched_trks, np.array(to_remove_trk_indices)
+                )
 
         for m in unmatched_trks:
             self.trackers[m].update(None, None, None, None)
 
         # create and initialise new trackers for unmatched detections
         for i in unmatched_dets:
-            trk = KalmanBoxTracker(dets[i, :], dets0[i, 5], dets0[i, 6], id_feature_keep[i, :], delta_t=self.delta_t)
+            trk = KalmanBoxTracker(
+                dets[i, :],
+                dets0[i, 5],
+                dets0[i, 6],
+                id_feature_keep[i, :],
+                delta_t=self.delta_t,
+            )
             self.trackers.append(trk)
         i = len(self.trackers)
         for trk in reversed(self.trackers):
@@ -554,17 +695,23 @@ class HybridSORT(object):
                 d = trk.get_state()[0][:4]
             else:
                 """
-                    this is optional to use the recent observation or the kalman filter prediction,
-                    we didn't notice significant difference here
+                this is optional to use the recent observation or the kalman filter prediction,
+                we didn't notice significant difference here
                 """
                 d = trk.last_observation[:4]
-            if (trk.time_since_update < 1) and (trk.hit_streak >= self.min_hits or self.frame_count <= self.min_hits):
+            if (trk.time_since_update < 1) and (
+                trk.hit_streak >= self.min_hits or self.frame_count <= self.min_hits
+            ):
                 # +1 as MOT benchmark requires positive
-                ret.append(np.concatenate((d, [trk.id + 1], [trk.conf], [trk.cls], [trk.det_ind])).reshape(1, -1))
+                ret.append(
+                    np.concatenate(
+                        (d, [trk.id + 1], [trk.conf], [trk.cls], [trk.det_ind])
+                    ).reshape(1, -1)
+                )
             i -= 1
             # remove dead tracklet
-            if (trk.time_since_update > self.max_age):
+            if trk.time_since_update > self.max_age:
                 self.trackers.pop(i)
-        if (len(ret) > 0):
+        if len(ret) > 0:
             return np.concatenate(ret)
         return np.empty((0, 7))

@@ -17,7 +17,7 @@ from boxmot.appearance.backbones.osnet_ain import (osnet_ain_x0_5,
                                                    osnet_ain_x1_0)
 from boxmot.appearance.backbones.resnet import resnet50, resnet101
 
-NR_CLASSES_DICT = {'market1501': 751, 'duke': 702, 'veri': 576, 'vehicleid': 576}
+NR_CLASSES_DICT = {"market1501": 751, "duke": 702, "veri": 576, "vehicleid": 576}
 
 
 __model_factory = {
@@ -54,7 +54,9 @@ def show_avai_models():
 
 
 def get_nr_classes(weigths):
-    num_classes = [value for key, value in NR_CLASSES_DICT.items() if key in str(weigths.name)]
+    num_classes = [
+        value for key, value in NR_CLASSES_DICT.items() if key in str(weigths.name)
+    ]
     if len(num_classes) == 0:
         num_classes = 1
     else:
@@ -84,9 +86,12 @@ def build_model(name, num_classes, loss="softmax", pretrained=True, use_gpu=True
     avai_models = list(__model_factory.keys())
     if name not in avai_models:
         raise KeyError("Unknown model: {}. Must be one of {}".format(name, avai_models))
-    if 'clip' in name:
+    if "clip" in name:
         from boxmot.appearance.backbones.clip.config.defaults import _C as cfg
-        return __model_factory[name](cfg, num_class=num_classes, camera_num=2, view_num=1)
+
+        return __model_factory[name](
+            cfg, num_class=num_classes, camera_num=2, view_num=1
+        )
     return __model_factory[name](
         num_classes=num_classes, loss=loss, pretrained=pretrained, use_gpu=use_gpu
     )
