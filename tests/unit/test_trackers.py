@@ -4,8 +4,15 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from boxmot import (OCSORT, BoTSORT, BYTETracker, DeepOCSORT, StrongSORT,
-                    create_tracker, get_tracker_config)
+from boxmot import (
+    OCSORT,
+    BoTSORT,
+    BYTETracker,
+    DeepOCSORT,
+    StrongSORT,
+    create_tracker,
+    get_tracker_config,
+)
 from boxmot.utils import WEIGHTS
 
 MOTION_ONLY_TRACKING_METHODS = [OCSORT, BYTETracker]

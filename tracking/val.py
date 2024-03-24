@@ -7,8 +7,12 @@ from pathlib import Path
 from ultralytics.utils.files import increment_path
 
 from boxmot.utils import EXAMPLES, EXPERIMENTATION, ROOT, WEIGHTS
-from tracking.utils import (download_mot_dataset, download_mot_eval_tools,
-                            eval_setup, unzip_mot_dataset)
+from tracking.utils import (
+    download_mot_dataset,
+    download_mot_eval_tools,
+    eval_setup,
+    unzip_mot_dataset,
+)
 
 
 def parse_mot_results(results):
