@@ -8,8 +8,12 @@ from boxmot.appearance.reid_multibackend import ReIDDetectMultiBackend
 from boxmot.motion.cmc.sof import SOF
 from boxmot.motion.kalman_filters.botsort_kf import KalmanFilter
 from boxmot.trackers.botsort.basetrack import BaseTrack, TrackState
-from boxmot.utils.matching import (embedding_distance, fuse_score,
-                                   iou_distance, linear_assignment)
+from boxmot.utils.matching import (
+    embedding_distance,
+    fuse_score,
+    iou_distance,
+    linear_assignment,
+)
 from boxmot.utils.ops import xywh2xyxy, xyxy2xywh
 
 
@@ -27,7 +31,8 @@ class STrack(BaseTrack):
         self.is_activated = False
         self.cls_hist = []  # (cls id, freq)
         self.update_cls(self.cls, self.score)
-
+        self.xy_hist = []
+        self.update_xy(self.xywh)
         self.tracklet_len = 0
 
         self.smooth_feat = None
@@ -36,6 +41,9 @@ class STrack(BaseTrack):
             self.update_features(feat)
         self.features = deque([], maxlen=feat_history)
         self.alpha = 0.9
+
+    def update_xy(self, xy):
+        self.xy_hist.append(xy[:2])
 
     def update_features(self, feat):
         feat /= np.linalg.norm(feat)
@@ -128,6 +136,7 @@ class STrack(BaseTrack):
         self.mean, self.covariance = self.kalman_filter.update(
             self.mean, self.covariance, new_track.xywh
         )
+        self.update_xy(new_track.xywh)
         if new_track.curr_feat is not None:
             self.update_features(new_track.curr_feat)
         self.tracklet_len = 0
@@ -156,6 +165,7 @@ class STrack(BaseTrack):
         self.mean, self.covariance = self.kalman_filter.update(
             self.mean, self.covariance, new_track.xywh
         )
+        self.update_xy(new_track.xywh)
 
         if new_track.curr_feat is not None:
             self.update_features(new_track.curr_feat)
