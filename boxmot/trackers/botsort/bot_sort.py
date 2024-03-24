@@ -20,7 +20,7 @@ from boxmot.utils.ops import xywh2xyxy, xyxy2xywh
 class STrack(BaseTrack):
     shared_kalman = KalmanFilter()
 
-    def __init__(self, det, feat=None, feat_history=50):
+    def __init__(self, det, timestamp, feat=None, feat_history=50):
         # wait activate
         self.xywh = xyxy2xywh(det[0:4])  # (x1, y1, x2, y2) --> (xc, yc, w, h)
         self.score = det[4]
@@ -32,7 +32,7 @@ class STrack(BaseTrack):
         self.cls_hist = []  # (cls id, freq)
         self.update_cls(self.cls, self.score)
         self.xy_hist = []
-        self.update_xy(self.xywh)
+        self.update_xy(timestamp, self.xywh)
         self.tracklet_len = 0
 
         self.smooth_feat = None
@@ -42,8 +42,8 @@ class STrack(BaseTrack):
         self.features = deque([], maxlen=feat_history)
         self.alpha = 0.9
 
-    def update_xy(self, xy):
-        self.xy_hist.append(xy[:2])
+    def update_xy(self, timestamp, xy):
+        self.xy_hist.append([timestamp, xy[:2]])
 
     def update_features(self, feat):
         feat /= np.linalg.norm(feat)
@@ -132,11 +132,11 @@ class STrack(BaseTrack):
         self.frame_id = frame_id
         self.start_frame = frame_id
 
-    def re_activate(self, new_track, frame_id, new_id=False):
+    def re_activate(self, new_track, frame_id, timestamp, new_id=False):
         self.mean, self.covariance = self.kalman_filter.update(
             self.mean, self.covariance, new_track.xywh
         )
-        self.update_xy(new_track.xywh)
+        self.update_xy(timestamp, new_track.xywh)
         if new_track.curr_feat is not None:
             self.update_features(new_track.curr_feat)
         self.tracklet_len = 0
@@ -151,7 +151,7 @@ class STrack(BaseTrack):
 
         self.update_cls(new_track.cls, new_track.score)
 
-    def update(self, new_track, frame_id):
+    def update(self, new_track, frame_id, timestamp):
         """
         Update a matched track
         :type new_track: STrack
@@ -165,7 +165,7 @@ class STrack(BaseTrack):
         self.mean, self.covariance = self.kalman_filter.update(
             self.mean, self.covariance, new_track.xywh
         )
-        self.update_xy(new_track.xywh)
+        self.update_xy(timestamp, new_track.xywh)
 
         if new_track.curr_feat is not None:
             self.update_features(new_track.curr_feat)
@@ -238,7 +238,7 @@ class BoTSORT(object):
         self.cmc = SOF()
         self.fuse_first_associate = fuse_first_associate
 
-    def update(self, dets, img, embs=None):
+    def update(self, dets, img, timestamp, embs=None):
         assert isinstance(
             dets, np.ndarray
         ), f"Unsupported 'dets' input format '{type(dets)}', valid format is np.ndarray"
@@ -286,10 +286,11 @@ class BoTSORT(object):
             """Detections"""
             if self.with_reid:
                 detections = [
-                    STrack(det, f) for (det, f) in zip(dets_first, features_high)
+                    STrack(det, timestamp, f)
+                    for (det, f) in zip(dets_first, features_high)
                 ]
             else:
-                detections = [STrack(det) for (det) in np.array(dets_first)]
+                detections = [STrack(det, timestamp) for (det) in np.array(dets_first)]
         else:
             detections = []
 
@@ -335,16 +336,18 @@ class BoTSORT(object):
             track = strack_pool[itracked]
             det = detections[idet]
             if track.state == TrackState.Tracked:
-                track.update(detections[idet], self.frame_id)
+                track.update(detections[idet], self.frame_id, timestamp)
                 activated_starcks.append(track)
             else:
-                track.re_activate(det, self.frame_id, new_id=False)
+                track.re_activate(det, self.frame_id, timestamp, new_id=False)
                 refind_stracks.append(track)
 
         """ Step 3: Second association, with low score detection boxes"""
         if len(dets_second) > 0:
             """Detections"""
-            detections_second = [STrack(dets_second) for dets_second in dets_second]
+            detections_second = [
+                STrack(dets_second, timestamp) for dets_second in dets_second
+            ]
         else:
             detections_second = []
 
@@ -359,7 +362,7 @@ class BoTSORT(object):
             track = r_tracked_stracks[itracked]
             det = detections_second[idet]
             if track.state == TrackState.Tracked:
-                track.update(det, self.frame_id)
+                track.update(det, self.frame_id, timestamp)
                 activated_starcks.append(track)
             else:
                 track.re_activate(det, self.frame_id, new_id=False)
@@ -388,7 +391,7 @@ class BoTSORT(object):
 
         matches, u_unconfirmed, u_detection = linear_assignment(dists, thresh=0.7)
         for itracked, idet in matches:
-            unconfirmed[itracked].update(detections[idet], self.frame_id)
+            unconfirmed[itracked].update(detections[idet], self.frame_id, timestamp)
             activated_starcks.append(unconfirmed[itracked])
         for it in u_unconfirmed:
             track = unconfirmed[it]
