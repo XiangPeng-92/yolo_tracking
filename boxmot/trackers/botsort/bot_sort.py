@@ -212,6 +212,7 @@ class BoTSORT(object):
         self.tracked_stracks = []  # type: list[STrack]
         self.lost_stracks = []  # type: list[STrack]
         self.removed_stracks = []  # type: list[STrack]
+        self.all_stracks = {}  # type: dict[STrack]
         BaseTrack.clear_count()
 
         self.frame_id = 0
@@ -406,6 +407,7 @@ class BoTSORT(object):
 
             track.activate(self.kalman_filter, self.frame_id)
             activated_starcks.append(track)
+            self.all_stracks[track.id] = track
 
         """ Step 5: Update state"""
         for track in self.lost_stracks:
