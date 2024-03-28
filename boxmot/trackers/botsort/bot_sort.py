@@ -33,6 +33,7 @@ class STrack(BaseTrack):
         self.update_cls(self.cls, self.score)
         self.xy_hist = []
         self.update_xy(timestamp, self.xywh)
+        self.crossing_hist = []
         self.tracklet_len = 0
 
         self.smooth_feat = None

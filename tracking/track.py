@@ -5,7 +5,6 @@ from functools import partial
 from pathlib import Path
 
 import torch
-
 from boxmot import TRACKERS
 from boxmot.tracker_zoo import create_tracker
 from boxmot.utils import ROOT, TRACKER_CONFIGS, WEIGHTS
@@ -100,23 +99,8 @@ def run(args):
     yolo.predictor.custom_args = args
 
     for frame_idx, r in enumerate(results):
-        print(r.timestamp.now() - r.timestamp)
-        if r.boxes.data.shape[1] == 7:
-            if args.save_id_crops:
-                for d in r.boxes:
-                    print("args.save_id_crops", d.data)
-                    save_one_box(
-                        d.xyxy,
-                        r.orig_img.copy(),
-                        file=(
-                            yolo.predictor.save_dir
-                            / "crops"
-                            / str(int(d.cls.cpu().numpy().item()))
-                            / str(int(d.id.cpu().numpy().item()))
-                            / f"{frame_idx}.jpg"
-                        ),
-                        BGR=True,
-                    )
+        if len(r.crossing_dict):
+            print(frame_idx)
 
 
 def parse_opt():
