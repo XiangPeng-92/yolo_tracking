@@ -123,6 +123,10 @@ def parse_opt():
     parser.add_argument(
         "--source", type=str, default="0", help="file/dir/URL/glob, 0 for webcam"
     )
+    parser.add_argument("--line-start-x", type=int, help="x of the start of the line")
+    parser.add_argument("--line-start-y", type=int, help="y of the start of the line")
+    parser.add_argument("--line-end-x", type=int, help="x of the end of the line")
+    parser.add_argument("--line-end-y", type=int, help="y of the end of the line")
     parser.add_argument(
         "--imgsz",
         "--img",
