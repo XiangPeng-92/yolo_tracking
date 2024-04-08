@@ -7,7 +7,7 @@ import numpy as np
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[2]  # root directory
-DATA = ROOT / 'data'
+DATA = ROOT / "data"
 BOXMOT = ROOT / "boxmot"
 EXAMPLES = ROOT / "tracking"
 TRACKER_CONFIGS = ROOT / "boxmot" / "configs"
@@ -37,9 +37,8 @@ class PerClassDecorator:
             args = list(args)
             dets = args[0]
             im = args[1]
-            
-            if instance.per_class is True:
 
+            if instance.per_class is True:
                 # Initialize an array to store the tracks for each class
                 per_class_tracks = []
 
@@ -52,7 +51,7 @@ class PerClassDecorator:
 
                     # activate the specific active tracks for this class id
                     instance.active_tracks = self.per_class_active_tracks[cls_id]
-                    
+
                     # Update detections using the decorated method
                     tracks = self.update(instance, class_dets, im)
 
@@ -61,15 +60,19 @@ class PerClassDecorator:
 
                     if tracks.size > 0:
                         per_class_tracks.append(tracks)
-                
+
                 # when all active tracks lists have been updated
                 instance.per_class_active_tracks = self.per_class_active_tracks
 
-                tracks = np.vstack(per_class_tracks) if per_class_tracks else np.empty((0, 8))
+                tracks = (
+                    np.vstack(per_class_tracks)
+                    if per_class_tracks
+                    else np.empty((0, 8))
+                )
             else:
                 # Process all detections at once if per_class is False or detections are empty
                 tracks = self.update(instance, dets, im)
-            
+
             return tracks
 
         return wrapper

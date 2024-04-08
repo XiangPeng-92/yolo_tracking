@@ -32,13 +32,13 @@ def linear_interpolation(input_, interval):
 
 def gaussian_smooth(input_, tau):
     output_ = list()
-    print('input_', input_)
+    print("input_", input_)
     ids = set(input_[:, 1])
     for i, id_ in enumerate(ids):
         tracks = input_[input_[:, 1] == id_]
-        print('tracks', tracks)
-        len_scale = np.clip(tau * np.log(tau ** 3 / len(tracks)), tau ** -1, tau ** 2)
-        gpr = GPR(RBF(len_scale, 'fixed'))
+        print("tracks", tracks)
+        len_scale = np.clip(tau * np.log(tau**3 / len(tracks)), tau**-1, tau**2)
+        gpr = GPR(RBF(len_scale, "fixed"))
         t = tracks[:, 0].reshape(-1, 1)
         x = tracks[:, 2].reshape(-1, 1)
         y = tracks[:, 3].reshape(-1, 1)
@@ -53,23 +53,36 @@ def gaussian_smooth(input_, tau):
         gpr.fit(t, h)
         hh = gpr.predict(t)
         # frame count, id, x, y, w, h, conf, cls, -1 (don't care)
-        output_.extend([
-            [t[j, 0], id_, xx[j], yy[j], ww[j], hh[j], tracks[j, 6], tracks[j, 7], -1] for j in range(len(t))
-        ])
+        output_.extend(
+            [
+                [
+                    t[j, 0],
+                    id_,
+                    xx[j],
+                    yy[j],
+                    ww[j],
+                    hh[j],
+                    tracks[j, 6],
+                    tracks[j, 7],
+                    -1,
+                ]
+                for j in range(len(t))
+            ]
+        )
     return output_
 
 
-def gsi(mot_results_folder=Path('examples/runs/val/exp87/labels'), interval=20, tau=10):
-    tracking_results_files = mot_results_folder.glob('MOT*FRCNN.txt')
+def gsi(mot_results_folder=Path("examples/runs/val/exp87/labels"), interval=20, tau=10):
+    tracking_results_files = mot_results_folder.glob("MOT*FRCNN.txt")
     for p in tracking_results_files:
         LOGGER.info(f"Applying gaussian smoothed interpolation (GSI) to: {p}")
-        tracking_results = np.loadtxt(p, dtype=int, delimiter=' ')
+        tracking_results = np.loadtxt(p, dtype=int, delimiter=" ")
         if tracking_results.size != 0:
             li = linear_interpolation(tracking_results, interval)
             gsi = gaussian_smooth(li, tau)
-            np.savetxt(p, gsi, fmt='%d %d %d %d %d %d %d %d %d')
+            np.savetxt(p, gsi, fmt="%d %d %d %d %d %d %d %d %d")
         else:
-            print('No tracking result in {p}. Skipping...')
+            print("No tracking result in {p}. Skipping...")
 
 
 def main():

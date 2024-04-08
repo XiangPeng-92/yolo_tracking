@@ -18,9 +18,9 @@ def iou_batch(bboxes1, bboxes2) -> np.ndarray:
     h = np.maximum(0.0, yy2 - yy1)
     wh = w * h
     o = wh / (
-        (bboxes1[..., 2] - bboxes1[..., 0]) * (bboxes1[..., 3] - bboxes1[..., 1]) +
-        (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] - bboxes2[..., 1]) -
-        wh
+        (bboxes1[..., 2] - bboxes1[..., 0]) * (bboxes1[..., 3] - bboxes1[..., 1])
+        + (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] - bboxes2[..., 1])
+        - wh
     )
     return o
 
@@ -44,9 +44,9 @@ def giou_batch(bboxes1, bboxes2) -> np.ndarray:
     h = np.maximum(0.0, yy2 - yy1)
     wh = w * h
     iou = wh / (
-        (bboxes1[..., 2] - bboxes1[..., 0]) * (bboxes1[..., 3] - bboxes1[..., 1]) +
-        (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] - bboxes2[..., 1]) -
-        wh
+        (bboxes1[..., 2] - bboxes1[..., 0]) * (bboxes1[..., 3] - bboxes1[..., 1])
+        + (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] - bboxes2[..., 1])
+        - wh
     )
 
     xxc1 = np.minimum(bboxes1[..., 0], bboxes2[..., 0])
@@ -82,9 +82,9 @@ def diou_batch(bboxes1, bboxes2) -> np.ndarray:
     h = np.maximum(0.0, yy2 - yy1)
     wh = w * h
     iou = wh / (
-        (bboxes1[..., 2] - bboxes1[..., 0]) * (bboxes1[..., 3] - bboxes1[..., 1]) +
-        (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] - bboxes2[..., 1]) -
-        wh
+        (bboxes1[..., 2] - bboxes1[..., 0]) * (bboxes1[..., 3] - bboxes1[..., 1])
+        + (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] - bboxes2[..., 1])
+        - wh
     )
 
     centerx1 = (bboxes1[..., 0] + bboxes1[..., 2]) / 2.0
@@ -125,9 +125,9 @@ def ciou_batch(bboxes1, bboxes2) -> np.ndarray:
     h = np.maximum(0.0, yy2 - yy1)
     wh = w * h
     iou = wh / (
-        (bboxes1[..., 2] - bboxes1[..., 0]) * (bboxes1[..., 3] - bboxes1[..., 1]) +
-        (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] - bboxes2[..., 1]) -
-        wh
+        (bboxes1[..., 2] - bboxes1[..., 0]) * (bboxes1[..., 3] - bboxes1[..., 1])
+        + (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] - bboxes2[..., 1])
+        - wh
     )
 
     centerx1 = (bboxes1[..., 0] + bboxes1[..., 2]) / 2.0
@@ -169,10 +169,20 @@ def centroid_batch(bboxes1, bboxes2, w, h) -> np.ndarray:
     """
 
     # Calculate centroids
-    centroids1 = np.stack(((bboxes1[..., 0] + bboxes1[..., 2]) / 2,
-                           (bboxes1[..., 1] + bboxes1[..., 3]) / 2), axis=-1)
-    centroids2 = np.stack(((bboxes2[..., 0] + bboxes2[..., 2]) / 2,
-                           (bboxes2[..., 1] + bboxes2[..., 3]) / 2), axis=-1)
+    centroids1 = np.stack(
+        (
+            (bboxes1[..., 0] + bboxes1[..., 2]) / 2,
+            (bboxes1[..., 1] + bboxes1[..., 3]) / 2,
+        ),
+        axis=-1,
+    )
+    centroids2 = np.stack(
+        (
+            (bboxes2[..., 0] + bboxes2[..., 2]) / 2,
+            (bboxes2[..., 1] + bboxes2[..., 3]) / 2,
+        ),
+        axis=-1,
+    )
 
     # Expand dimensions for broadcasting
     centroids1 = np.expand_dims(centroids1, 1)
@@ -198,15 +208,27 @@ def run_asso_func(func, *args):
     *args: Variable length argument list, containing either bounding boxes and optionally size parameters.
     """
     if func not in [iou_batch, giou_batch, diou_batch, ciou_batch, centroid_batch]:
-        raise ValueError("Invalid function specified. Must be either '(g,d,c, )iou_batch' or 'centroid_batch'.")
+        raise ValueError(
+            "Invalid function specified. Must be either '(g,d,c, )iou_batch' or 'centroid_batch'."
+        )
 
     if func in (iou_batch, giou_batch, diou_batch, ciou_batch):
-        if len(args) != 4 or not all(isinstance(arg, (list, np.ndarray)) for arg in args[0:2]):
-            raise ValueError("Invalid arguments for iou_batch. Expected two bounding boxes.")
+        if len(args) != 4 or not all(
+            isinstance(arg, (list, np.ndarray)) for arg in args[0:2]
+        ):
+            raise ValueError(
+                "Invalid arguments for iou_batch. Expected two bounding boxes."
+            )
         return func(*args[0:2])
     elif func is centroid_batch:
-        if len(args) != 4 or not all(isinstance(arg, (list, np.ndarray)) for arg in args[:2]) or not all(isinstance(arg, (int)) for arg in args[2:]):
-            raise ValueError("Invalid arguments for centroid_batch. Expected two bounding boxes and two size parameters.")
+        if (
+            len(args) != 4
+            or not all(isinstance(arg, (list, np.ndarray)) for arg in args[:2])
+            or not all(isinstance(arg, (int)) for arg in args[2:])
+        ):
+            raise ValueError(
+                "Invalid arguments for centroid_batch. Expected two bounding boxes and two size parameters."
+            )
         return func(*args)
     else:
         raise ValueError("No such association method")
@@ -218,7 +240,7 @@ def get_asso_func(asso_mode):
         "giou": giou_batch,
         "ciou": ciou_batch,
         "diou": diou_batch,
-        "centroid": centroid_batch
+        "centroid": centroid_batch,
     }
 
     return ASSO_FUNCS[asso_mode]

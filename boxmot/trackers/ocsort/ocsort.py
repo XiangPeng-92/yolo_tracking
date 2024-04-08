@@ -286,10 +286,20 @@ class OCSort(BaseTracker):
             First round of association
         """
         matched, unmatched_dets, unmatched_trks = associate(
-            dets[:, 0:5], trks, self.asso_func, self.asso_threshold, velocities, k_observations, self.inertia, w, h
+            dets[:, 0:5],
+            trks,
+            self.asso_func,
+            self.asso_threshold,
+            velocities,
+            k_observations,
+            self.inertia,
+            w,
+            h,
         )
         for m in matched:
-            self.active_tracks[m[1]].update(dets[m[0], :5], dets[m[0], 5], dets[m[0], 6])
+            self.active_tracks[m[1]].update(
+                dets[m[0], :5], dets[m[0], 5], dets[m[0], 6]
+            )
 
         """
             Second round of associaton by OCR
@@ -314,7 +324,9 @@ class OCSort(BaseTracker):
                     if iou_left[m[0], m[1]] < self.asso_threshold:
                         continue
                     self.active_tracks[trk_ind].update(
-                        dets_second[det_ind, :5], dets_second[det_ind, 5], dets_second[det_ind, 6]
+                        dets_second[det_ind, :5],
+                        dets_second[det_ind, 5],
+                        dets_second[det_ind, 6],
                     )
                     to_remove_trk_indices.append(trk_ind)
                 unmatched_trks = np.setdiff1d(
@@ -339,7 +351,9 @@ class OCSort(BaseTracker):
                     det_ind, trk_ind = unmatched_dets[m[0]], unmatched_trks[m[1]]
                     if iou_left[m[0], m[1]] < self.asso_threshold:
                         continue
-                    self.active_tracks[trk_ind].update(dets[det_ind, :5], dets[det_ind, 5], dets[det_ind, 6])
+                    self.active_tracks[trk_ind].update(
+                        dets[det_ind, :5], dets[det_ind, 5], dets[det_ind, 6]
+                    )
                     to_remove_det_indices.append(det_ind)
                     to_remove_trk_indices.append(trk_ind)
                 unmatched_dets = np.setdiff1d(
@@ -354,7 +368,9 @@ class OCSort(BaseTracker):
 
         # create and initialise new trackers for unmatched detections
         for i in unmatched_dets:
-            trk = KalmanBoxTracker(dets[i, :5], dets[i, 5], dets[i, 6], delta_t=self.delta_t)
+            trk = KalmanBoxTracker(
+                dets[i, :5], dets[i, 5], dets[i, 6], delta_t=self.delta_t
+            )
             self.active_tracks.append(trk)
         i = len(self.active_tracks)
         for trk in reversed(self.active_tracks):
@@ -371,9 +387,9 @@ class OCSort(BaseTracker):
             ):
                 # +1 as MOT benchmark requires positive
                 ret.append(
-                    np.concatenate((d, [trk.id + 1], [trk.conf], [trk.cls], [trk.det_ind])).reshape(
-                        1, -1
-                    )
+                    np.concatenate(
+                        (d, [trk.id + 1], [trk.conf], [trk.cls], [trk.det_ind])
+                    ).reshape(1, -1)
                 )
             i -= 1
             # remove dead tracklet

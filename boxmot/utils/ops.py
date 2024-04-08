@@ -53,8 +53,8 @@ def xywh2tlwh(x):
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
     y[..., 0] = x[..., 0] - x[..., 2] / 2.0  # xc --> t
     y[..., 1] = x[..., 1] - x[..., 3] / 2.0  # yc --> l
-    y[..., 2] = x[..., 2]                    # width
-    y[..., 3] = x[..., 3]                    # height
+    y[..., 2] = x[..., 2]  # width
+    y[..., 3] = x[..., 3]  # height
     return y
 
 

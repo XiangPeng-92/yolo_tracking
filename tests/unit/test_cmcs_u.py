@@ -7,7 +7,6 @@ from boxmot.motion.cmc.sift import SIFT
 from boxmot.motion.cmc.sof import SOF
 
 
-
 # Fixture for creating CMC objects
 @pytest.fixture
 def cmc_object(request):

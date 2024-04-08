@@ -5,9 +5,15 @@ import colorsys
 
 
 class BaseTracker(object):
-    def __init__(self, det_thresh: float = 0.3, max_age: int = 30, min_hits: int = 3, iou_threshold: float = 0.3):
+    def __init__(
+        self,
+        det_thresh: float = 0.3,
+        max_age: int = 30,
+        min_hits: int = 3,
+        iou_threshold: float = 0.3,
+    ):
         """
-        Initialize the BaseTracker object with detection threshold, maximum age, minimum hits, 
+        Initialize the BaseTracker object with detection threshold, maximum age, minimum hits,
         and Intersection Over Union (IOU) threshold for tracking objects in video frames.
 
         Parameters:
@@ -29,9 +35,11 @@ class BaseTracker(object):
         self.frame_count = 0
         self.active_tracks = []  # This might be handled differently in derived classes
 
-    def update(self, dets: np.ndarray, img: np.ndarray, embs: np.ndarray = None) -> None:
+    def update(
+        self, dets: np.ndarray, img: np.ndarray, embs: np.ndarray = None
+    ) -> None:
         """
-        Abstract method to update the tracker with new detections for a new frame. This method 
+        Abstract method to update the tracker with new detections for a new frame. This method
         should be implemented by subclasses.
 
         Parameters:
@@ -42,9 +50,13 @@ class BaseTracker(object):
         Raises:
         - NotImplementedError: If the subclass does not implement this method.
         """
-        raise NotImplementedError("The update method needs to be implemented by the subclass.")
+        raise NotImplementedError(
+            "The update method needs to be implemented by the subclass."
+        )
 
-    def id_to_color(self, id: int, saturation: float = 0.75, value: float = 0.95) -> tuple:
+    def id_to_color(
+        self, id: int, saturation: float = 0.75, value: float = 0.95
+    ) -> tuple:
         """
         Generates a consistent unique BGR color for a given ID using hashing.
 
@@ -60,26 +72,28 @@ class BaseTracker(object):
         # Hash the ID to get a consistent unique value
         hash_object = hashlib.sha256(str(id).encode())
         hash_digest = hash_object.hexdigest()
-        
+
         # Convert the first few characters of the hash to an integer
         # and map it to a value between 0 and 1 for the hue
-        hue = int(hash_digest[:8], 16) / 0xffffffff
-        
+        hue = int(hash_digest[:8], 16) / 0xFFFFFFFF
+
         # Convert HSV to RGB
         rgb = colorsys.hsv_to_rgb(hue, saturation, value)
-        
+
         # Convert RGB from 0-1 range to 0-255 range and format as hexadecimal
         rgb_255 = tuple(int(component * 255) for component in rgb)
-        hex_color = '#%02x%02x%02x' % rgb_255
+        hex_color = "#%02x%02x%02x" % rgb_255
         # Strip the '#' character and convert the string to RGB integers
-        rgb = tuple(int(hex_color.strip('#')[i:i+2], 16) for i in (0, 2, 4))
-        
+        rgb = tuple(int(hex_color.strip("#")[i : i + 2], 16) for i in (0, 2, 4))
+
         # Convert RGB to BGR for OpenCV
         bgr = rgb[::-1]
-        
+
         return bgr
 
-    def plot_box_on_img(self, img: np.ndarray, box: tuple, conf: float, cls: int, id: int) -> np.ndarray:
+    def plot_box_on_img(
+        self, img: np.ndarray, box: tuple, conf: float, cls: int, id: int
+    ) -> np.ndarray:
         """
         Draws a bounding box with ID, confidence, and class information on an image.
 
@@ -102,21 +116,22 @@ class BaseTracker(object):
             (int(box[0]), int(box[1])),
             (int(box[2]), int(box[3])),
             self.id_to_color(id),
-            thickness
+            thickness,
         )
         img = cv.putText(
             img,
-            f'id: {int(id)}, conf: {conf:.2f}, c: {int(cls)}',
+            f"id: {int(id)}, conf: {conf:.2f}, c: {int(cls)}",
             (int(box[0]), int(box[1]) - 10),
             cv.FONT_HERSHEY_SIMPLEX,
             fontscale,
             self.id_to_color(id),
-            thickness
+            thickness,
         )
         return img
 
-
-    def plot_trackers_trajectories(self, img: np.ndarray, observations: list, id: int) -> np.ndarray:
+    def plot_trackers_trajectories(
+        self, img: np.ndarray, observations: list, id: int
+    ) -> np.ndarray:
         """
         Draws the trajectories of tracked objects based on historical observations. Each point
         in the trajectory is represented by a circle, with the thickness increasing for more
@@ -132,17 +147,15 @@ class BaseTracker(object):
         - np.ndarray: The image array with the trajectories drawn on it.
         """
         for i, box in enumerate(observations):
-            trajectory_thickness = int(np.sqrt(float (i + 1)) * 1.2)
+            trajectory_thickness = int(np.sqrt(float(i + 1)) * 1.2)
             img = cv.circle(
                 img,
-                (int((box[0] + box[2]) / 2),
-                int((box[1] + box[3]) / 2)), 
+                (int((box[0] + box[2]) / 2), int((box[1] + box[3]) / 2)),
                 2,
                 color=self.id_to_color(int(id)),
-                thickness=trajectory_thickness
+                thickness=trajectory_thickness,
             )
         return img
-
 
     def plot_results(self, img: np.ndarray, show_trajectories: bool) -> np.ndarray:
         """
@@ -168,7 +181,9 @@ class BaseTracker(object):
                             box = a.history_observations[-1]
                             img = self.plot_box_on_img(img, box, a.conf, a.cls, a.id)
                             if show_trajectories:
-                                img = self.plot_trackers_trajectories(img, a.history_observations, a.id)
+                                img = self.plot_trackers_trajectories(
+                                    img, a.history_observations, a.id
+                                )
         else:
             for a in self.active_tracks:
                 if a.history_observations:
@@ -176,7 +191,8 @@ class BaseTracker(object):
                         box = a.history_observations[-1]
                         img = self.plot_box_on_img(img, box, a.conf, a.cls, a.id)
                         if show_trajectories:
-                            img = self.plot_trackers_trajectories(img, a.history_observations, a.id)
-                
-        return img
+                            img = self.plot_trackers_trajectories(
+                                img, a.history_observations, a.id
+                            )
 
+        return img

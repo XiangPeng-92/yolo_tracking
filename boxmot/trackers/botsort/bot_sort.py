@@ -7,8 +7,12 @@ from boxmot.appearance.reid_auto_backend import ReidAutoBackend
 from boxmot.motion.cmc.sof import SOF
 from boxmot.motion.kalman_filters.botsort_kf import KalmanFilter
 from boxmot.trackers.botsort.basetrack import BaseTrack, TrackState
-from boxmot.utils.matching import (embedding_distance, fuse_score,
-                                   iou_distance, linear_assignment)
+from boxmot.utils.matching import (
+    embedding_distance,
+    fuse_score,
+    iou_distance,
+    linear_assignment,
+)
 from boxmot.utils.ops import xywh2xyxy, xyxy2xywh
 from boxmot.trackers.basetracker import BaseTracker
 from boxmot.utils import PerClassDecorator
@@ -224,9 +228,7 @@ class BoTSORT(BaseTracker):
 
         self.with_reid = with_reid
         if self.with_reid:
-            rab = ReidAutoBackend(
-                weights=model_weights, device=device, half=fp16
-            )
+            rab = ReidAutoBackend(weights=model_weights, device=device, half=fp16)
             self.model = rab.get_backend()
 
         self.cmc = SOF()
@@ -259,7 +261,9 @@ class BoTSORT(BaseTracker):
         confs = dets[:, 4]
 
         # find second round association detections
-        second_mask = np.logical_and(confs > self.track_low_thresh, confs < self.track_high_thresh)
+        second_mask = np.logical_and(
+            confs > self.track_low_thresh, confs < self.track_high_thresh
+        )
         dets_second = dets[second_mask]
 
         # find first round association detections
@@ -278,7 +282,9 @@ class BoTSORT(BaseTracker):
         if len(dets) > 0:
             """Detections"""
             if self.with_reid:
-                detections = [STrack(det, f) for (det, f) in zip(dets_first, features_high)]
+                detections = [
+                    STrack(det, f) for (det, f) in zip(dets_first, features_high)
+                ]
             else:
                 detections = [STrack(det) for (det) in np.array(dets_first)]
         else:
@@ -308,7 +314,7 @@ class BoTSORT(BaseTracker):
         ious_dists = iou_distance(strack_pool, detections)
         ious_dists_mask = ious_dists > self.proximity_thresh
         if self.fuse_first_associate:
-          ious_dists = fuse_score(ious_dists, detections)
+            ious_dists = fuse_score(ious_dists, detections)
 
         if self.with_reid:
             emb_dists = embedding_distance(strack_pool, detections) / 2.0
@@ -368,7 +374,7 @@ class BoTSORT(BaseTracker):
         ious_dists_mask = ious_dists > self.proximity_thresh
 
         ious_dists = fuse_score(ious_dists, detections)
-        
+
         if self.with_reid:
             emb_dists = embedding_distance(unconfirmed, detections) / 2.0
             emb_dists[emb_dists > self.appearance_thresh] = 1.0

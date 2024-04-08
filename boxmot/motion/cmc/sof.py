@@ -11,7 +11,6 @@ from boxmot.utils import logger as LOGGER
 
 
 class SOF(CMCInterface):
-
     def __init__(
         self,
         warp_mode=cv2.MOTION_EUCLIDEAN,
@@ -20,7 +19,7 @@ class SOF(CMCInterface):
         scale=0.1,
         align=False,
         grayscale=True,
-        draw_optical_flow=False
+        draw_optical_flow=False,
     ):
         """Compute the warp matrix from src to dst.
 
@@ -91,7 +90,6 @@ class SOF(CMCInterface):
 
         # handle first frame
         if self.prev_img is None:
-
             # find keypoints in first frame
             keypoints = cv2.goodFeaturesToTrack(
                 img,
@@ -101,7 +99,7 @@ class SOF(CMCInterface):
                 minDistance=1,
                 blockSize=3,
                 useHarrisDetector=False,
-                k=0.04
+                k=0.04,
             )
 
             # if image lacks distinctive features, ignore this frame and try to initialize again
@@ -122,7 +120,7 @@ class SOF(CMCInterface):
                 self.prev_img, img, self.prev_keypoints, None
             )
         except Exception as e:
-            LOGGER.warning(f'calcOpticalFlowPyrLK failed: {e}')
+            LOGGER.warning(f"calcOpticalFlowPyrLK failed: {e}")
             return H
 
         # for simplicity, if no keypoints are found, we discard the frame
@@ -139,14 +137,16 @@ class SOF(CMCInterface):
                 self.prev_keypoints, next_keypoints, cv2.RANSAC
             )
         except Exception as e:
-            LOGGER.warning(f'Affine matrix could not be generated: {e}')
+            LOGGER.warning(f"Affine matrix could not be generated: {e}")
             return H
         finally:
             if H is None:
                 return np.eye(2, 3)
 
         if self.draw_optical_flow:
-            self.warped_img = cv2.warpAffine(self.prev_img, H, (w, h), flags=cv2.INTER_LINEAR)
+            self.warped_img = cv2.warpAffine(
+                self.prev_img, H, (w, h), flags=cv2.INTER_LINEAR
+            )
             self.mask = np.zeros_like(img)
             for i, (new, old) in enumerate(zip(next_keypoints, self.prev_keypoints)):
                 a, b = new.ravel()
@@ -156,14 +156,15 @@ class SOF(CMCInterface):
                     pt1=tuple(np.int32([a, b])),
                     pt2=tuple(np.int32([c, d])),
                     color=(255, 255, 255),
-                    thickness=1
+                    thickness=1,
                 )
                 self.mask = cv2.circle(
                     img=self.mask,
                     center=tuple(np.int32([a, b])),
                     radius=1,
                     color=(255, 255, 255),
-                    thickness=2)
+                    thickness=2,
+                )
 
         # store to next iteration
         self.prev_img = img.copy()
@@ -179,40 +180,44 @@ class SOF(CMCInterface):
 
 def main():
     sof = SparseOptFlow(scale=0.25, align=True, grayscale=True, draw_optical_flow=True)
-    curr_img = cv2.imread('assets/MOT17-mini/train/MOT17-13-FRCNN/img1/000005.jpg')
-    prev_img = cv2.imread('assets/MOT17-mini/train/MOT17-13-FRCNN/img1/000001.jpg')
+    curr_img = cv2.imread("assets/MOT17-mini/train/MOT17-13-FRCNN/img1/000005.jpg")
+    prev_img = cv2.imread("assets/MOT17-mini/train/MOT17-13-FRCNN/img1/000001.jpg")
     curr_dets = np.array(
-        [[1083.8207,  541.5978, 1195.7952,  655.8790],  # noqa:E241
-         [1635.6456,  563.8348, 1695.4153,  686.6704],  # noqa:E241
-         [ 957.0879,  545.6558, 1042.6743,  611.8740],  # noqa:E241,E261,E201
-         [1550.0317,  562.5705, 1600.3931,  684.7425],  # noqa:E241
-         [  78.8801,  714.3307,  121.0272,  817.6857],  # noqa:E241,E261,E201
-         [1382.9938,  512.2731, 1418.6012,  620.1938],  # noqa:E241
-         [1459.7921,  496.2123, 1488.5767,  584.3533],  # noqa:E241
-         [ 982.9818,  492.8579, 1013.6625,  517.9271],  # noqa:E241,E261,E201
-         [ 496.1809,  541.3972,  531.4617,  638.0989],  # noqa:E241,E261,E201
-         [1498.8512,  522.6646, 1526.1145,  587.7672],  # noqa:E241
-         [ 536.4527,  548.4061,  569.2723,  635.5656],  # noqa:E241,E261,E201
-         [ 247.8834,  580.8851,  287.2241,  735.3685],  # noqa:E241,E261,E201
-         [ 151.4096,  572.3918,  203.5401,  731.1011],  # noqa:E241,E261,E201
-         [1227.4098,  440.5505, 1252.7986,  489.5295]]  # noqa:E241
+        [
+            [1083.8207, 541.5978, 1195.7952, 655.8790],  # noqa:E241
+            [1635.6456, 563.8348, 1695.4153, 686.6704],  # noqa:E241
+            [957.0879, 545.6558, 1042.6743, 611.8740],  # noqa:E241,E261,E201
+            [1550.0317, 562.5705, 1600.3931, 684.7425],  # noqa:E241
+            [78.8801, 714.3307, 121.0272, 817.6857],  # noqa:E241,E261,E201
+            [1382.9938, 512.2731, 1418.6012, 620.1938],  # noqa:E241
+            [1459.7921, 496.2123, 1488.5767, 584.3533],  # noqa:E241
+            [982.9818, 492.8579, 1013.6625, 517.9271],  # noqa:E241,E261,E201
+            [496.1809, 541.3972, 531.4617, 638.0989],  # noqa:E241,E261,E201
+            [1498.8512, 522.6646, 1526.1145, 587.7672],  # noqa:E241
+            [536.4527, 548.4061, 569.2723, 635.5656],  # noqa:E241,E261,E201
+            [247.8834, 580.8851, 287.2241, 735.3685],  # noqa:E241,E261,E201
+            [151.4096, 572.3918, 203.5401, 731.1011],  # noqa:E241,E261,E201
+            [1227.4098, 440.5505, 1252.7986, 489.5295],
+        ]  # noqa:E241
     )
     prev_dets = np.array(
-        [[2.1069e-02, 6.7026e+02, 4.9816e+01, 8.8407e+02],
-         [1.0765e+03, 5.4009e+02, 1.1883e+03, 6.5219e+02],
-         [1.5208e+03, 5.6322e+02, 1.5711e+03, 6.7676e+02],
-         [1.6111e+03, 5.5926e+02, 1.6640e+03, 6.7443e+02],
-         [9.5244e+02, 5.4681e+02, 1.0384e+03, 6.1180e+02],
-         [1.3691e+03, 5.1258e+02, 1.4058e+03, 6.1695e+02],
-         [1.2043e+02, 7.0780e+02, 1.7309e+02, 8.0518e+02],
-         [1.4454e+03, 5.0919e+02, 1.4724e+03, 5.8270e+02],
-         [9.7848e+02, 4.9563e+02, 1.0083e+03, 5.1980e+02],
-         [5.0166e+02, 5.4778e+02, 5.3796e+02, 6.3940e+02],
-         [1.4777e+03, 5.1856e+02, 1.5105e+03, 5.9523e+02],
-         [1.9540e+02, 5.7292e+02, 2.3711e+02, 7.2717e+02],
-         [2.7373e+02, 5.8564e+02, 3.1335e+02, 7.3281e+02],
-         [5.4038e+02, 5.4735e+02, 5.7359e+02, 6.3797e+02],
-         [1.2190e+03, 4.4176e+02, 1.2414e+03, 4.9038e+02]]
+        [
+            [2.1069e-02, 6.7026e02, 4.9816e01, 8.8407e02],
+            [1.0765e03, 5.4009e02, 1.1883e03, 6.5219e02],
+            [1.5208e03, 5.6322e02, 1.5711e03, 6.7676e02],
+            [1.6111e03, 5.5926e02, 1.6640e03, 6.7443e02],
+            [9.5244e02, 5.4681e02, 1.0384e03, 6.1180e02],
+            [1.3691e03, 5.1258e02, 1.4058e03, 6.1695e02],
+            [1.2043e02, 7.0780e02, 1.7309e02, 8.0518e02],
+            [1.4454e03, 5.0919e02, 1.4724e03, 5.8270e02],
+            [9.7848e02, 4.9563e02, 1.0083e03, 5.1980e02],
+            [5.0166e02, 5.4778e02, 5.3796e02, 6.3940e02],
+            [1.4777e03, 5.1856e02, 1.5105e03, 5.9523e02],
+            [1.9540e02, 5.7292e02, 2.3711e02, 7.2717e02],
+            [2.7373e02, 5.8564e02, 3.1335e02, 7.3281e02],
+            [5.4038e02, 5.4735e02, 5.7359e02, 6.3797e02],
+            [1.2190e03, 4.4176e02, 1.2414e03, 4.9038e02],
+        ]
     )
 
     warp_matrix = sof.apply(prev_img, prev_dets)
@@ -223,7 +228,7 @@ def main():
         warp_matrix = sof.apply(prev_img, prev_dets)
         warp_matrix = sof.apply(curr_img, curr_dets)
     end = time.process_time()
-    print('Total time', end - start)
+    print("Total time", end - start)
     print(warp_matrix)
 
     if sof.warped_img is not None:
@@ -234,10 +239,10 @@ def main():
         warped = cv2.addWeighted(warped, 0.5, curr_img, 0.5, 0)
 
         # Display the frame with keypoints and optical flow tracks
-        cv2.imshow('Optical Flow', warped)
+        cv2.imshow("Optical Flow", warped)
         cv2.waitKey(0)
 
-        cv2.imwrite(str(BOXMOT / 'motion/cmc/sof_aligned.jpg'), warped)
+        cv2.imwrite(str(BOXMOT / "motion/cmc/sof_aligned.jpg"), warped)
 
 
 if __name__ == "__main__":

@@ -8,7 +8,6 @@ from boxmot.appearance.reid_model_factory import (
 
 
 class PyTorchBackend(BaseModelBackend):
-
     def __init__(self, weights, device, half):
         super().__init__(weights, device, half)
         self.nhwc = False

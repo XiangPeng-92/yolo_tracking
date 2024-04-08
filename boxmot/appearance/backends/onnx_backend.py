@@ -8,18 +8,22 @@ tr = TestRequirements()
 
 
 class ONNXBackend(BaseModelBackend):
-
     def __init__(self, weights, device, half):
         super().__init__(weights, device, half)
         self.nhwc = False
         self.half = half
 
     def load_model(self, w):
-
-        tr.check_packages(("onnxruntime-gpu==1.16.3" if self.cuda else "onnxruntime==1.16.3", ))
+        tr.check_packages(
+            ("onnxruntime-gpu==1.16.3" if self.cuda else "onnxruntime==1.16.3",)
+        )
         import onnxruntime
 
-        providers = (["CUDAExecutionProvider", "CPUExecutionProvider"] if self.cuda else ["CPUExecutionProvider"])
+        providers = (
+            ["CUDAExecutionProvider", "CPUExecutionProvider"]
+            if self.cuda
+            else ["CPUExecutionProvider"]
+        )
         self.session = onnxruntime.InferenceSession(str(w), providers=providers)
 
     def forward(self, im_batch):

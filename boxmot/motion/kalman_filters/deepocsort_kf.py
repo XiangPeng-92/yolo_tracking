@@ -402,8 +402,12 @@ class KalmanFilter(object):
                 self.attr_saved["x"] = big_m @ self.attr_saved["x"]
                 self.attr_saved["x"][:2] += t
                 self.attr_saved["P"] = big_m @ self.attr_saved["P"] @ big_m.T
-                self.attr_saved["last_measurement"][:2] = m @ self.attr_saved["last_measurement"][:2] + t
-                self.attr_saved["last_measurement"][2:] = m @ self.attr_saved["last_measurement"][2:]
+                self.attr_saved["last_measurement"][:2] = (
+                    m @ self.attr_saved["last_measurement"][:2] + t
+                )
+                self.attr_saved["last_measurement"][2:] = (
+                    m @ self.attr_saved["last_measurement"][2:]
+                )
         else:
             scale = np.linalg.norm(m[:, 0])
             self.x[:2] = m @ self.x[:2] + t
@@ -424,11 +428,15 @@ class KalmanFilter(object):
                 # self.attr_saved["x"][6] *= scale
 
                 self.attr_saved["P"][:2, :2] = m @ self.attr_saved["P"][:2, :2] @ m.T
-                self.attr_saved["P"][4:6, 4:6] = m @ self.attr_saved["P"][4:6, 4:6] @ m.T
+                self.attr_saved["P"][4:6, 4:6] = (
+                    m @ self.attr_saved["P"][4:6, 4:6] @ m.T
+                )
                 # self.attr_saved["P"][2, 2] *= 2 * scale
                 # self.attr_saved["P"][6, 6] *= 2 * scale
 
-                self.attr_saved["last_measurement"][:2] = m @ self.attr_saved["last_measurement"][:2] + t
+                self.attr_saved["last_measurement"][:2] = (
+                    m @ self.attr_saved["last_measurement"][:2] + t
+                )
                 # self.attr_saved["last_measurement"][2] *= scale
 
     def unfreeze(self):
@@ -871,7 +879,6 @@ class KalmanFilter(object):
 
         if update_first:
             for i, (z, F, Q, H, R, B, u) in enumerate(zip(zs, Fs, Qs, Hs, Rs, Bs, us)):
-
                 self.update(z, R=R, H=H)
                 means[i, :] = self.x
                 covariances[i, :, :] = self.P
@@ -884,7 +891,6 @@ class KalmanFilter(object):
                     saver.save()
         else:
             for i, (z, F, Q, H, R, B, u) in enumerate(zip(zs, Fs, Qs, Hs, Rs, Bs, us)):
-
                 self.predict(u=u, B=B, F=F, Q=Q)
                 means_p[i, :] = self.x
                 covariances_p[i, :, :] = self.P
@@ -1197,10 +1203,14 @@ class KalmanFilter(object):
         x = self.x
         P = self.P
 
-        assert x.ndim == 1 or x.ndim == 2, "x must have one or two dimensions, but has {}".format(x.ndim)
+        assert (
+            x.ndim == 1 or x.ndim == 2
+        ), "x must have one or two dimensions, but has {}".format(x.ndim)
 
         if x.ndim == 1:
-            assert x.shape[0] == self.dim_x, "Shape of x must be ({},{}), but is {}".format(self.dim_x, 1, x.shape)
+            assert (
+                x.shape[0] == self.dim_x
+            ), "Shape of x must be ({},{}), but is {}".format(self.dim_x, 1, x.shape)
         else:
             assert x.shape == (
                 self.dim_x,
@@ -1210,21 +1220,31 @@ class KalmanFilter(object):
         assert P.shape == (
             self.dim_x,
             self.dim_x,
-        ), "Shape of P must be ({},{}), but is {}".format(self.dim_x, self.dim_x, P.shape)
+        ), "Shape of P must be ({},{}), but is {}".format(
+            self.dim_x, self.dim_x, P.shape
+        )
 
         assert Q.shape == (
             self.dim_x,
             self.dim_x,
-        ), "Shape of Q must be ({},{}), but is {}".format(self.dim_x, self.dim_x, P.shape)
+        ), "Shape of Q must be ({},{}), but is {}".format(
+            self.dim_x, self.dim_x, P.shape
+        )
 
         assert F.shape == (
             self.dim_x,
             self.dim_x,
-        ), "Shape of F must be ({},{}), but is {}".format(self.dim_x, self.dim_x, F.shape)
+        ), "Shape of F must be ({},{}), but is {}".format(
+            self.dim_x, self.dim_x, F.shape
+        )
 
-        assert np.ndim(H) == 2, "Shape of H must be (dim_z, {}), but is {}".format(P.shape[0], shape(H))
+        assert np.ndim(H) == 2, "Shape of H must be (dim_z, {}), but is {}".format(
+            P.shape[0], shape(H)
+        )
 
-        assert H.shape[1] == P.shape[0], "Shape of H must be (dim_z, {}), but is {}".format(P.shape[0], H.shape)
+        assert (
+            H.shape[1] == P.shape[0]
+        ), "Shape of H must be (dim_z, {}), but is {}".format(P.shape[0], H.shape)
 
         # shape of R must be the same as HPH'
         hph_shape = (H.shape[0], H.shape[0])
@@ -1238,7 +1258,9 @@ class KalmanFilter(object):
                 (1, 1),
             ], "R must be scalar or one element array, but is shaped {}".format(r_shape)
         else:
-            assert r_shape == hph_shape, "shape of R should be {} but it is {}".format(hph_shape, r_shape)
+            assert r_shape == hph_shape, "shape of R should be {} but it is {}".format(
+                hph_shape, r_shape
+            )
 
         if z is not None:
             z_shape = shape(z)
@@ -1252,18 +1274,26 @@ class KalmanFilter(object):
             assert Hx.ndim == 1 or shape(Hx) == (
                 1,
                 1,
-            ), "shape of z should be {}, not {} for the given H".format(shape(Hx), z_shape)
+            ), "shape of z should be {}, not {} for the given H".format(
+                shape(Hx), z_shape
+            )
 
         elif shape(Hx) == (1,):
-            assert z_shape[0] == 1, "Shape of z must be {} for the given H".format(shape(Hx))
+            assert z_shape[0] == 1, "Shape of z must be {} for the given H".format(
+                shape(Hx)
+            )
 
         else:
             assert z_shape == shape(Hx) or (
                 len(z_shape) == 1 and shape(Hx) == (z_shape[0], 1)
-            ), "shape of z should be {}, not {} for the given H".format(shape(Hx), z_shape)
+            ), "shape of z should be {}, not {} for the given H".format(
+                shape(Hx), z_shape
+            )
 
         if np.ndim(Hx) > 1 and shape(Hx) != (1, 1):
-            assert shape(Hx) == z_shape, "shape of z should be {} for the given H, but it is {}".format(
+            assert (
+                shape(Hx) == z_shape
+            ), "shape of z should be {} for the given H, but it is {}".format(
                 shape(Hx), z_shape
             )
 
@@ -1476,7 +1506,9 @@ def predict_steadystate(x, F=1, u=0, B=1):
     return x
 
 
-def batch_filter(x, P, zs, Fs, Qs, Hs, Rs, Bs=None, us=None, update_first=False, saver=None):
+def batch_filter(
+    x, P, zs, Fs, Qs, Hs, Rs, Bs=None, us=None, update_first=False, saver=None
+):
     """
     Batch processes a sequences of measurements.
     Parameters
@@ -1556,7 +1588,6 @@ def batch_filter(x, P, zs, Fs, Qs, Hs, Rs, Bs=None, us=None, update_first=False,
 
     if update_first:
         for i, (z, F, Q, H, R, B, u) in enumerate(zip(zs, Fs, Qs, Hs, Rs, Bs, us)):
-
             x, P = update(x, P, z, R=R, H=H)
             means[i, :] = x
             covariances[i, :, :] = P
@@ -1568,7 +1599,6 @@ def batch_filter(x, P, zs, Fs, Qs, Hs, Rs, Bs=None, us=None, update_first=False,
                 saver.save()
     else:
         for i, (z, F, Q, H, R, B, u) in enumerate(zip(zs, Fs, Qs, Hs, Rs, Bs, us)):
-
             x, P = predict(x, P, u=u, B=B, F=F, Q=Q)
             means_p[i, :] = x
             covariances_p[i, :, :] = P

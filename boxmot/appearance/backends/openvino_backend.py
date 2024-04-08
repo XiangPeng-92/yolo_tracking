@@ -9,14 +9,12 @@ tr = TestRequirements()
 
 
 class OpenVinoBackend(BaseModelBackend):
-
     def __init__(self, weights, device, half):
         super().__init__(weights, device, half)
         self.nhwc = False
         self.half = half
 
     def load_model(self, w):
-
         LOGGER.info(f"Loading {w} for OpenVINO inference...")
         try:
             # requires openvino-dev: https://pypi.org/project/openvino-dev/
@@ -29,9 +27,7 @@ class OpenVinoBackend(BaseModelBackend):
             )
         ie = Core()
         if not Path(w).is_file():  # if not *.xml
-            w = next(
-                Path(w).glob("*.xml")
-            )  # get *.xml file from *_openvino_model dir
+            w = next(Path(w).glob("*.xml"))  # get *.xml file from *_openvino_model dir
         network = ie.read_model(model=w, weights=Path(w).with_suffix(".bin"))
         if network.get_parameters()[0].get_layout().empty:
             network.get_parameters()[0].set_layout(Layout("NCWH"))

@@ -10,14 +10,12 @@ tr = TestRequirements()
 
 
 class TensorRTBackend(BaseModelBackend):
-
     def __init__(self, weights, device, half):
         super().__init__(weights, device, half)
         self.nhwc = False
         self.half = half
 
     def load_model(self, w):
-
         LOGGER.info(f"Loading {w} for TensorRT inference...")
         tr.check_packages(("nvidia-tensorrt",))
         import tensorrt as trt  # https://developer.nvidia.com/nvidia-tensorrt-download
@@ -45,12 +43,8 @@ class TensorRTBackend(BaseModelBackend):
                     self.fp16 = True
             shape = tuple(self.context.get_binding_shape(index))
             im = torch.from_numpy(np.empty(shape, dtype=dtype)).to(device)
-            self.bindings[name] = Binding(
-                name, dtype, shape, im, int(im.data_ptr())
-            )
-        self.binding_addrs = OrderedDict(
-            (n, d.ptr) for n, d in self.bindings.items()
-        )
+            self.bindings[name] = Binding(name, dtype, shape, im, int(im.data_ptr()))
+        self.binding_addrs = OrderedDict((n, d.ptr) for n, d in self.bindings.items())
         # batch_size = self.bindings["images"].shape[
         #     0
         # ]  # if dynamic, this is instead max batch size
@@ -60,9 +54,7 @@ class TensorRTBackend(BaseModelBackend):
             i_in, i_out = (
                 self.model_.get_binding_index(x) for x in ("images", "output")
             )
-            self.context.set_binding_shape(
-                i_in, im_batch.shape
-            )  # reshape if dynamic
+            self.context.set_binding_shape(i_in, im_batch.shape)  # reshape if dynamic
             self.bindings["images"] = self.bindings["images"]._replace(
                 shape=im_batch.shape
             )
