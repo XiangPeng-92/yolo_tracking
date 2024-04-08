@@ -1,11 +1,11 @@
 # Mikel Broström 🔥 Yolo Tracking 🧾 AGPL-3.0 license
 
+from abc import ABC, abstractmethod
 from pathlib import Path
 
 import numpy as np
 import torch
 from ultralytics.engine.results import Results
-from abc import ABC, abstractmethod
 
 
 class YoloInterface(ABC):

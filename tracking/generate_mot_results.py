@@ -1,28 +1,24 @@
 # Mikel Broström 🔥 Yolo Tracking 🧾 AGPL-3.0 license
 
 import argparse
-from pathlib import Path
-import numpy as np
-from functools import partial
 import json
-import torch
+from functools import partial
+from pathlib import Path
 
+import numpy as np
+import torch
 from tqdm import tqdm
+from ultralytics import YOLO
+from ultralytics.data.loaders import LoadImages
+from ultralytics.data.utils import VID_FORMATS
+from ultralytics.utils.files import increment_path
 
 from boxmot import TRACKERS
 from boxmot.tracker_zoo import create_tracker
-
-from ultralytics.utils.files import increment_path
-from boxmot.utils import ROOT, WEIGHTS, TRACKER_CONFIGS
-from boxmot.utils.checks import TestRequirements
+from boxmot.utils import ROOT, TRACKER_CONFIGS, WEIGHTS
 from boxmot.utils import logger as LOGGER
-
-from ultralytics.data.loaders import LoadImages
-from ultralytics import YOLO
-from ultralytics.data.utils import VID_FORMATS
-
+from boxmot.utils.checks import TestRequirements
 from tracking.utils import convert_to_mot_format, write_mot_results
-
 
 __tr = TestRequirements()
 __tr.check_packages(

@@ -5,6 +5,7 @@ import numpy as np
 import scipy
 import torch
 from scipy.spatial.distance import cdist
+
 from boxmot.utils.iou import iou_batch
 
 """

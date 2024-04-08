@@ -1,16 +1,16 @@
 # Mikel Broström 🔥 Yolo Tracking 🧾 AGPL-3.0 license
 
 import argparse
-import cv2
-import numpy as np
 from functools import partial
 from pathlib import Path
 
+import cv2
+import numpy as np
 import torch
 
 from boxmot import TRACKERS
 from boxmot.tracker_zoo import create_tracker
-from boxmot.utils import ROOT, WEIGHTS, TRACKER_CONFIGS
+from boxmot.utils import ROOT, TRACKER_CONFIGS, WEIGHTS
 from boxmot.utils.checks import TestRequirements
 from tracking.detectors import get_yolo_inferer
 
@@ -20,9 +20,8 @@ __tr.check_packages(
 )  # install
 
 from ultralytics import YOLO
-from ultralytics.utils.plotting import Annotator, colors
 from ultralytics.data.utils import VID_FORMATS
-from ultralytics.utils.plotting import save_one_box
+from ultralytics.utils.plotting import Annotator, colors, save_one_box
 
 
 def on_predict_start(predictor, persist=False):

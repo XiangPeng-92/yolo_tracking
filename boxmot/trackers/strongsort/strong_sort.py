@@ -6,9 +6,9 @@ from boxmot.appearance.reid_auto_backend import ReidAutoBackend
 from boxmot.motion.cmc import get_cmc_method
 from boxmot.trackers.strongsort.sort.detection import Detection
 from boxmot.trackers.strongsort.sort.tracker import Tracker
+from boxmot.utils import PerClassDecorator
 from boxmot.utils.matching import NearestNeighborDistanceMetric
 from boxmot.utils.ops import xyxy2tlwh
-from boxmot.utils import PerClassDecorator
 
 
 class StrongSORT(object):

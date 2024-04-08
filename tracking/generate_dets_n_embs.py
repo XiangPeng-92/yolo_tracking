@@ -2,15 +2,15 @@
 
 import argparse
 from pathlib import Path
+
 import numpy as np
+import torch
 from tqdm import tqdm
 
-import torch
-
+from boxmot.appearance.reid_auto_backend import ReidAutoBackend
 from boxmot.utils import ROOT, WEIGHTS
 from boxmot.utils.checks import TestRequirements
 from tracking.detectors import get_yolo_inferer
-from boxmot.appearance.reid_auto_backend import ReidAutoBackend
 
 __tr = TestRequirements()
 __tr.check_packages(

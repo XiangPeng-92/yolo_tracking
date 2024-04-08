@@ -1,15 +1,16 @@
 # Mikel Broström 🔥 Yolo Tracking 🧾 AGPL-3.0 license
 
-import numpy as np
 from collections import deque
+
+import numpy as np
 
 from boxmot.appearance.reid_auto_backend import ReidAutoBackend
 from boxmot.motion.cmc import get_cmc_method
 from boxmot.motion.kalman_filters.deepocsort_kf import KalmanFilter
-from boxmot.utils.association import associate, linear_assignment
-from boxmot.utils.iou import get_asso_func
 from boxmot.trackers.basetracker import BaseTracker
 from boxmot.utils import PerClassDecorator
+from boxmot.utils.association import associate, linear_assignment
+from boxmot.utils.iou import get_asso_func
 
 
 def k_previous_obs(observations, cur_age, k):

@@ -1,16 +1,18 @@
-import re
-import sys
 import argparse
+import re
 import subprocess
-from boxmot.utils import EXAMPLES, ROOT, WEIGHTS, DATA
+import sys
 from pathlib import Path
-from tracking.utils import (
-    download_mot_eval_tools,
-    download_mot_dataset,
-    unzip_mot_dataset,
-    eval_setup,
-)
+
 from ultralytics.utils.files import increment_path
+
+from boxmot.utils import DATA, EXAMPLES, ROOT, WEIGHTS
+from tracking.utils import (
+    download_mot_dataset,
+    download_mot_eval_tools,
+    eval_setup,
+    unzip_mot_dataset,
+)
 
 
 def parse_mot_results(results):

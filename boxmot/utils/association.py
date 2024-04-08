@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from boxmot.utils.iou import iou_batch, centroid_batch, run_asso_func
+from boxmot.utils.iou import centroid_batch, iou_batch, run_asso_func
 
 
 def speed_direction_batch(dets, tracks):

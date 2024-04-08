@@ -18,8 +18,8 @@ import yaml
 from ultralytics.utils.checks import check_requirements, print_args
 
 from boxmot.utils import EXAMPLES, ROOT, WEIGHTS, logger
-from tracking.val import run_trackeval
 from tracking.generate_mot_results import run_generate_mot_results
+from tracking.val import run_trackeval
 
 
 class Objective:

@@ -1,14 +1,15 @@
 # Mikel Broström 🔥 Yolo Tracking 🧾 AGPL-3.0 license
 
-import numpy as np
 from collections import deque
 
+import numpy as np
+
 from boxmot.motion.kalman_filters.bytetrack_kf import KalmanFilter
+from boxmot.trackers.basetracker import BaseTracker
 from boxmot.trackers.bytetrack.basetrack import BaseTrack, TrackState
+from boxmot.utils import PerClassDecorator
 from boxmot.utils.matching import fuse_score, iou_distance, linear_assignment
 from boxmot.utils.ops import tlwh2xyah, xywh2tlwh, xywh2xyxy, xyxy2xywh
-from boxmot.trackers.basetracker import BaseTracker
-from boxmot.utils import PerClassDecorator
 
 
 class STrack(BaseTrack):

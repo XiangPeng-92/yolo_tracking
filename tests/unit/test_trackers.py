@@ -1,20 +1,19 @@
-import pytest
-import numpy as np
 from pathlib import Path
-from boxmot.utils import WEIGHTS
 
-
+import numpy as np
+import pytest
 from numpy.testing import assert_allclose
-from boxmot import (
-    StrongSORT,
-    BoTSORT,
-    DeepOCSORT,
-    OCSORT,
-    BYTETracker,
-    get_tracker_config,
-    create_tracker,
-)
 
+from boxmot import (
+    OCSORT,
+    BoTSORT,
+    BYTETracker,
+    DeepOCSORT,
+    StrongSORT,
+    create_tracker,
+    get_tracker_config,
+)
+from boxmot.utils import WEIGHTS
 
 MOTION_ONLY_TRACKING_METHODS = [OCSORT, BYTETracker]
 MOTION_N_APPEARANCE_TRACKING_METHODS = [StrongSORT, BoTSORT, DeepOCSORT]

@@ -1,21 +1,23 @@
 # Mikel Broström 🔥 Yolo Tracking 🧾 AGPL-3.0 license
 
-import numpy as np
-import torch
-from ultralytics.utils import ops
-from ultralytics.engine.results import Results
-from typing import Union
-from pathlib import Path
 import os
-import sys
-import git
-import requests
-import zipfile
 import subprocess
+import sys
+import zipfile
+from pathlib import Path
+from typing import Union
+
+import git
+import numpy as np
+import requests
+import torch
 from git import Repo, exc
-from boxmot.utils import logger as LOGGER
 from tqdm import tqdm
+from ultralytics.engine.results import Results
+from ultralytics.utils import ops
+
 from boxmot.utils import EXAMPLES, ROOT
+from boxmot.utils import logger as LOGGER
 
 
 def download_mot_eval_tools(val_tools_path):

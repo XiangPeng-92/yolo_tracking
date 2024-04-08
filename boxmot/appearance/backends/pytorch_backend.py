@@ -1,10 +1,9 @@
-import numpy as np
 from pathlib import Path
 
+import numpy as np
+
 from boxmot.appearance.backends.base_backend import BaseModelBackend
-from boxmot.appearance.reid_model_factory import (
-    load_pretrained_weights,
-)
+from boxmot.appearance.reid_model_factory import load_pretrained_weights
 
 
 class PyTorchBackend(BaseModelBackend):

@@ -2,17 +2,15 @@
 
 import numpy as np
 import torch
+from examples.detectors.yolo_interface import YoloInterface
 from super_gradients.common.object_names import Models
 from super_gradients.training import models
 from ultralytics.engine.results import Results
 from ultralytics.utils import ops
 from ultralytics.utils.downloads import download
-from ultralytics.utils import ops
-
 from yolov9 import load
-from boxmot.utils import logger as LOGGER
-from examples.detectors.yolo_interface import YoloInterface
 
+from boxmot.utils import logger as LOGGER
 
 YOLOv9_ZOO = {
     "gelan-c.pt": "https://github.com/WongKinYiu/yolov9/releases/download/v0.1/gelan-c.pt",

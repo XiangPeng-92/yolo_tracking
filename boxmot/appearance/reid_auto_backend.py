@@ -1,17 +1,18 @@
-import torch
 from pathlib import Path
-from typing import Union, Tuple
+from typing import Tuple, Union
 
-from boxmot.utils import WEIGHTS
-from boxmot.utils import logger as LOGGER
+import torch
+
 from boxmot.appearance import export_formats
+from boxmot.appearance.backends.base_backend import BaseModelBackend
 from boxmot.appearance.backends.onnx_backend import ONNXBackend
 from boxmot.appearance.backends.openvino_backend import OpenVinoBackend
 from boxmot.appearance.backends.pytorch_backend import PyTorchBackend
 from boxmot.appearance.backends.tensorrt_backend import TensorRTBackend
 from boxmot.appearance.backends.tflite_backend import TFLiteBackend
 from boxmot.appearance.backends.torchscript_backend import TorchscriptBackend
-from boxmot.appearance.backends.base_backend import BaseModelBackend
+from boxmot.utils import WEIGHTS
+from boxmot.utils import logger as LOGGER
 
 
 class ReidAutoBackend:

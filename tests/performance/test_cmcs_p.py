@@ -1,7 +1,9 @@
-import cv2
 import time
+
+import cv2
 import numpy as np
 import pytest
+
 from boxmot.motion.cmc.ecc import ECC
 from boxmot.motion.cmc.orb import ORB
 from boxmot.motion.cmc.sift import SIFT

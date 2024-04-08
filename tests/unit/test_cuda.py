@@ -1,11 +1,12 @@
-import cv2
-import torch
-import pytest
-import numpy as np
 from pathlib import Path
-from boxmot.utils import ROOT
+
+import cv2
+import numpy as np
+import pytest
+import torch
 
 from boxmot.appearance.reid_auto_backend import ReidAutoBackend
+from boxmot.utils import ROOT
 
 REID_MODELS = [
     Path("mobilenetv2_x1_0_market1501.pt"),

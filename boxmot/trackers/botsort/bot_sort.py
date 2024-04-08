@@ -1,12 +1,15 @@
 # Mikel Broström 🔥 Yolo Tracking 🧾 AGPL-3.0 license
 
-import numpy as np
 from collections import deque
+
+import numpy as np
 
 from boxmot.appearance.reid_auto_backend import ReidAutoBackend
 from boxmot.motion.cmc.sof import SOF
 from boxmot.motion.kalman_filters.botsort_kf import KalmanFilter
+from boxmot.trackers.basetracker import BaseTracker
 from boxmot.trackers.botsort.basetrack import BaseTrack, TrackState
+from boxmot.utils import PerClassDecorator
 from boxmot.utils.matching import (
     embedding_distance,
     fuse_score,
@@ -14,8 +17,6 @@ from boxmot.utils.matching import (
     linear_assignment,
 )
 from boxmot.utils.ops import xywh2xyxy, xyxy2xywh
-from boxmot.trackers.basetracker import BaseTracker
-from boxmot.utils import PerClassDecorator
 
 
 class STrack(BaseTrack):

@@ -1,8 +1,9 @@
-import numpy as np
 from pathlib import Path
-from boxmot.utils import logger as LOGGER
+
+import numpy as np
 
 from boxmot.appearance.backends.base_backend import BaseModelBackend
+from boxmot.utils import logger as LOGGER
 from boxmot.utils.checks import TestRequirements
 
 tr = TestRequirements()
