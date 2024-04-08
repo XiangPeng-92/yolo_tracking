@@ -5,6 +5,7 @@ from functools import partial
 from pathlib import Path
 
 import torch
+
 from boxmot import TRACKERS
 from boxmot.tracker_zoo import create_tracker
 from boxmot.utils import ROOT, TRACKER_CONFIGS, WEIGHTS
