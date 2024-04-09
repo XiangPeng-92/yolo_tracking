@@ -4,6 +4,8 @@ import argparse
 from functools import partial
 from pathlib import Path
 
+import cv2
+import numpy as np
 import torch
 
 from boxmot import TRACKERS
@@ -19,7 +21,7 @@ __tr.check_packages(
 
 from ultralytics import YOLO
 from ultralytics.data.utils import VID_FORMATS
-from ultralytics.utils.plotting import save_one_box
+from ultralytics.utils.plotting import Annotator, colors, save_one_box
 
 
 def on_predict_start(predictor, persist=False):
@@ -67,7 +69,7 @@ def run(args):
         conf=args.conf,
         iou=args.iou,
         agnostic_nms=args.agnostic_nms,
-        show=args.show,
+        show=False,
         stream=True,
         device=args.device,
         show_conf=args.show_conf,
@@ -99,9 +101,16 @@ def run(args):
     # store custom args in predictor
     yolo.predictor.custom_args = args
 
-    for frame_idx, r in enumerate(results):
-        if len(r.crossing_dict):
-            print(frame_idx)
+    for r in results:
+        img = yolo.predictor.trackers[0].plot_results(
+            r.orig_img, args.show_trajectories
+        )
+
+        if args.show is True:
+            cv2.imshow("BoxMOT", img)
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord(" ") or key == ord("q"):
+                break
 
 
 def parse_opt():
@@ -182,6 +191,9 @@ def parse_opt():
     )
     parser.add_argument(
         "--show-conf", action="store_false", help="hide confidences when show"
+    )
+    parser.add_argument(
+        "--show-trajectories", action="store_true", help="show confidences"
     )
     parser.add_argument(
         "--save-txt", action="store_true", help="save tracking results in a txt file"

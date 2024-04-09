@@ -80,8 +80,11 @@ In inverse chronological order:
 
 #### News
 
-* Switched from setuptools to poetry for unified: dependency resolution, packaging and publishing management
-* ~x3 pipeline speedup by: using pregenerated detections + embeddings and jobs parallelization (Mars 2024)
+* Enabled tracking per class for all trackers besides StrongSORT by `--per-class` (March 2024)
+* Enabled trajectory plotting for all trackers besides StrongSORT by `--show-trajectories` (March 2024)
+* All trackers inherit from BaseTracker (Mars 2024)
+* Switched from setuptools to poetry for unified: dependency resolution, packaging and publishing management (March 2024)
+* ~x3 pipeline speedup by: using pregenerated detections + embeddings and jobs parallelization (March 2024)
 * Ultra fast exerimentation enabled by allowing local detections and embeddings saving. This data can then be loaded into any tracking algorithm, avoiding the overhead of repeatedly generating it (February 2024)
 * Centroid-based cost function added to OCSORT and DeepOCSORT (suitable for: small and/or high speed objects and low FPS videos) (January 2024)
 * Custom Ultralytics package updated from 8.0.124 to 8.0.224 (December 2023)
@@ -104,7 +107,7 @@ git clone https://github.com/mikel-brostrom/yolo_tracking.git
 cd yolo_tracking
 pip install poetry
 poetry install --with yolo  # installed boxmot + yolo dependencies
-poetry shell  # actives the newly created environment with the installed dependencies
+poetry shell  # activates the newly created environment with the installed dependencies
 ```
 
 but if you only want to import the tracking modules you can simply:
@@ -197,16 +200,6 @@ python tracking/track.py --source 0 --yolo-model yolov8s.pt --classes 16 17  # C
 
 </details>
 
-<details>
-<summary>MOT compliant results</summary>
-
-Can be saved to your experiment folder `runs/track/exp*/` by
-
-```bash
-python tracking/track.py --source ... --save-mot
-```
-
-</details>
 
 </details>
 
@@ -244,10 +237,10 @@ The set of hyperparameters leading to the best HOTA result are written to the tr
 </details>
 
 
-## Custom object detection model tracking example
+## Custom tracking examples
 
 <details>
-<summary>Minimalistic</summary>
+<summary>Detection</summary>
 
 ```python
 import cv2
@@ -272,14 +265,24 @@ while True:
     dets = np.array([[144, 212, 578, 480, 0.82, 0],
                     [425, 281, 576, 472, 0.56, 65]])
 
-    tracks = tracker.update(dets, im) # --> (x, y, x, y, id, conf, cls, ind)
+    tracker.update(dets, im) # --> M X (x, y, x, y, id, conf, cls, ind)
+    tracker.plot_results(im, show_trajectories=True)
+
+    # break on pressing q or space
+    cv2.imshow('BoxMOT detection', im)     
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord(' ') or key == ord('q'):
+        break
+
+vid.release()
+cv2.destroyAllWindows()
 ```
 
 </details>
 
 
 <details>
-<summary>Complete</summary>
+<summary>Pose & segmentation</summary>
 
 ```python
 import cv2
@@ -296,56 +299,34 @@ tracker = DeepOCSORT(
 )
 
 vid = cv2.VideoCapture(0)
-color = (0, 0, 255)  # BGR
-thickness = 2
-fontscale = 0.5
 
 while True:
     ret, im = vid.read()
 
+    keypoints = np.random.rand(2, 17, 3)
+    mask = np.random.rand(2, 480, 640)
     # substitute by your object detector, input to tracker has to be N X (x, y, x, y, conf, cls)
     dets = np.array([[144, 212, 578, 480, 0.82, 0],
                     [425, 281, 576, 472, 0.56, 65]])
 
-    tracks = tracker.update(dets, im) # --> (x, y, x, y, id, conf, cls, ind)
+    tracks = tracker.update(dets, im) # --> M x (x, y, x, y, id, conf, cls, ind)
 
-    xyxys = tracks[:, 0:4].astype('int') # float64 to int
-    ids = tracks[:, 4].astype('int') # float64 to int
-    confs = tracks[:, 5]
-    clss = tracks[:, 6].astype('int') # float64 to int
+    # xyxys = tracks[:, 0:4].astype('int') # float64 to int
+    # ids = tracks[:, 4].astype('int') # float64 to int
+    # confs = tracks[:, 5]
+    # clss = tracks[:, 6].astype('int') # float64 to int
     inds = tracks[:, 7].astype('int') # float64 to int
 
     # in case you have segmentations or poses alongside with your detections you can use
     # the ind variable in order to identify which track is associated to each seg or pose by:
-    # segs = segs[inds]
-    # poses = poses[inds]
-    # you can then zip them together: zip(tracks, poses)
+    # masks = masks[inds]
+    # keypoints = keypoints[inds]
+    # such that you then can: zip(tracks, masks) or zip(tracks, keypoints)
 
-    # print bboxes with their associated id, cls and conf
-    if tracks.shape[0] != 0:
-        for xyxy, id, conf, cls in zip(xyxys, ids, confs, clss):
-            im = cv2.rectangle(
-                im,
-                (xyxy[0], xyxy[1]),
-                (xyxy[2], xyxy[3]),
-                color,
-                thickness
-            )
-            cv2.putText(
-                im,
-                f'id: {id}, conf: {conf}, c: {cls}',
-                (xyxy[0], xyxy[1]-10),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                fontscale,
-                color,
-                thickness
-            )
-
-    # show image with bboxes, ids, classes and confidences
-    cv2.imshow('frame', im)
-
-    # break on pressing q
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    # break on pressing q or space
+    cv2.imshow('BoxMOT segmentation | pose', im)     
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord(' ') or key == ord('q'):
         break
 
 vid.release()
@@ -405,38 +386,12 @@ while True:
 
     tracks = tracker.update(dets, im) # --> (x, y, x, y, id, conf, cls, ind)
 
-    if tracks.shape[0] != 0:
+    tracker.plot_results(im, show_trajectories=True)
 
-        xyxys = tracks[:, 0:4].astype('int') # float64 to int
-        ids = tracks[:, 4].astype('int') # float64 to int
-        confs = tracks[:, 5].round(decimals=2)
-        clss = tracks[:, 6].astype('int') # float64 to int
-        inds = tracks[:, 7].astype('int') # float64 to int
-
-        # print bboxes with their associated id, cls and conf
-        for xyxy, id, conf, cls in zip(xyxys, ids, confs, clss):
-            im = cv2.rectangle(
-                im,
-                (xyxy[0], xyxy[1]),
-                (xyxy[2], xyxy[3]),
-                color,
-                thickness
-            )
-            cv2.putText(
-                im,
-                f'id: {id}, conf: {conf}, c: {cls}',
-                (xyxy[0], xyxy[1]-10),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                fontscale,
-                color,
-                thickness
-            )
-
-    # show image with bboxes, ids, classes and confidences
-    cv2.imshow('frame', im)
-
-    # break on pressing q
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    # break on pressing q or space
+    cv2.imshow('BoxMOT tiled inference', im)     
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord(' ') or key == ord('q'):
         break
 
 vid.release()

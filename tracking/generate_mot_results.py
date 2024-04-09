@@ -19,7 +19,6 @@ from boxmot.tracker_zoo import create_tracker
 from boxmot.utils import ROOT, TRACKER_CONFIGS, WEIGHTS
 from boxmot.utils import logger as LOGGER
 from boxmot.utils.checks import TestRequirements
-from tracking.detectors import get_yolo_inferer
 from tracking.utils import convert_to_mot_format, write_mot_results
 
 __tr = TestRequirements()

@@ -7,9 +7,9 @@ import numpy as np
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[2]  # root directory
+DATA = ROOT / "data"
 BOXMOT = ROOT / "boxmot"
 EXAMPLES = ROOT / "tracking"
-EXPERIMENTATION = ROOT / "experimentation"
 TRACKER_CONFIGS = ROOT / "boxmot" / "configs"
 WEIGHTS = ROOT / "tracking" / "weights"
 REQUIREMENTS = ROOT / "requirements.txt"
@@ -23,41 +23,57 @@ logger.add(sys.stderr, colorize=True, level="INFO")
 
 class PerClassDecorator:
     def __init__(self, method):
+        # Store the method that will be decorated
         self.update = method
+        self.nr_classes = 80
+        self.per_class_active_tracks = {}
+        for i in range(self.nr_classes):
+            self.per_class_active_tracks[i] = []
 
     def __get__(self, instance, owner):
+        # This makes PerClassDecorator a non-data descriptor that binds the method to the instance
         def wrapper(*args, **kwargs):
-            modified_args = list(args)
-            dets = modified_args[0]
-            im = modified_args[1]
+            # Unpack arguments for clarity
+            args = list(args)
+            dets = args[0]
+            im = args[1]
+            timestamp = args[2]
 
-            # input one class of detections at a time in order to not mix them up
-            if instance.per_class is True and dets.size != 0:
-                dets_dict = {
-                    class_id: np.array([det for det in dets if det[5] == class_id])
-                    for class_id in set(det[5] for det in dets)
-                }
-                # get unique classes in predictions
-                detected_classes = set(dets_dict.keys())
-                # get unque classes with active trackers
-                active_classes = set([tracker.cls for tracker in instance.trackers])
-                # get tracks that are both active and in the current detections
-                relevant_classes = active_classes.union(detected_classes)
+            if instance.per_class is True:
+                # Initialize an array to store the tracks for each class
+                per_class_tracks = []
 
-                mc_dets = np.empty(shape=(0, 8))
-                for class_id in relevant_classes:
-                    modified_args[0] = np.array(
-                        dets_dict.get(int(class_id), np.empty((0, 6)))
-                    )
-                    logger.debug(
-                        f"Feeding class {int(class_id)}: {modified_args[0].shape}"
-                    )
-                    dets = self.update(instance, modified_args[0], im)
-                    if dets.size != 0:
-                        mc_dets = np.append(mc_dets, dets, axis=0)
-                logger.debug(f"Per class updates output: {mc_dets.shape}")
+                for cls_id in range(self.nr_classes):
+                    if dets.size > 0:
+                        class_dets = dets[dets[:, 5] == cls_id]
+                    else:
+                        class_dets = np.empty((0, 6))
+                    logger.debug(f"Processing class {int(cls_id)}: {class_dets.shape}")
+
+                    # activate the specific active tracks for this class id
+                    instance.active_tracks = self.per_class_active_tracks[cls_id]
+
+                    # Update detections using the decorated method
+                    tracks = self.update(instance, class_dets, im)
+
+                    # save the updated active tracks
+                    self.per_class_active_tracks[cls_id] = instance.active_tracks
+
+                    if tracks.size > 0:
+                        per_class_tracks.append(tracks)
+
+                # when all active tracks lists have been updated
+                instance.per_class_active_tracks = self.per_class_active_tracks
+
+                tracks = (
+                    np.vstack(per_class_tracks)
+                    if per_class_tracks
+                    else np.empty((0, 8))
+                )
             else:
-                mc_dets = self.update(instance, dets, im)
-            return mc_dets
+                # Process all detections at once if per_class is False or detections are empty
+                tracks = self.update(instance, dets, im, timestamp)
+
+            return tracks
 
         return wrapper

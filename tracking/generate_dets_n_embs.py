@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from boxmot.appearance.reid_multibackend import ReIDDetectMultiBackend
+from boxmot.appearance.reid_auto_backend import ReidAutoBackend
 from boxmot.utils import ROOT, WEIGHTS
 from boxmot.utils.checks import TestRequirements
 from tracking.detectors import get_yolo_inferer
@@ -57,7 +57,11 @@ def run(args):
 
     reids = []
     for r in opt.reid_model:
-        reids.append(ReIDDetectMultiBackend(weights=r, device="cpu", fp16=False))
+        rab = ReidAutoBackend(
+            weights=args.reid_model, device=yolo.predictor.device, half=args.half
+        )
+        model = rab.get_backend()
+        reids.append(model)
         embs_path = (
             yolo.predictor.save_dir
             / "embs"
@@ -88,7 +92,11 @@ def run(args):
         frame_idx = torch.full((1, 1), frame_idx + 1)
         frame_idx = frame_idx.repeat(nr_dets, 1)
 
-        dets = r.boxes.data[:, 0:4].numpy()
+        if r.boxes.data.is_cuda:
+            dets = r.boxes.data[:, 0:4].cpu().numpy()
+        else:
+            dets = r.boxes.data[:, 0:4].numpy()
+
         img = r.orig_img
 
         dets = np.concatenate(
@@ -208,7 +216,7 @@ def parse_opt():
 if __name__ == "__main__":
     opt = parse_opt()
     mot_folder_paths = [item for item in Path(opt.source).iterdir()]
-
+    print(mot_folder_paths)
     for y in opt.yolo_model:
         opt.yolo_model = y
         opt.name = y.stem

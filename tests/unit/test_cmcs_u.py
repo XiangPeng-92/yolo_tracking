@@ -27,9 +27,6 @@ def test_cmc_apply(cmc_object):
     assert isinstance(result, np.ndarray)
 
 
-# Add more test functions as needed
-
-
 # Test preprocessing function
 @pytest.mark.parametrize("cmc_object", [ECC, ORB, SIFT, SOF], indirect=True)
 def test_cmc_preprocess(cmc_object):

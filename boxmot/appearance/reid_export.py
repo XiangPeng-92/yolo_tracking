@@ -12,8 +12,8 @@ from torch.utils.mobile_optimizer import optimize_for_mobile
 
 from boxmot.appearance import export_formats
 from boxmot.appearance.backbones import build_model, get_nr_classes
+from boxmot.appearance.reid_auto_backend import ReidAutoBackend
 from boxmot.appearance.reid_model_factory import get_model_name, load_pretrained_weights
-from boxmot.appearance.reid_multibackend import ReIDDetectMultiBackend
 from boxmot.utils import WEIGHTS
 from boxmot.utils import logger as LOGGER
 from boxmot.utils.checks import TestRequirements
@@ -295,7 +295,8 @@ if __name__ == "__main__":
             args.device.type != "cpu"
         ), "--half only compatible with GPU export, i.e. use --device 0"
 
-    ReIDDetectMultiBackend(weights=args.weights, device="cpu", fp16=False)
+    rab = ReidAutoBackend(weights=args.weights, device=args.device, half=args.half)
+    model = rab.get_backend()
 
     model = build_model(
         get_model_name(args.weights),

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from ultralytics.utils.files import increment_path
 
-from boxmot.utils import EXAMPLES, EXPERIMENTATION, ROOT, WEIGHTS
+from boxmot.utils import DATA, EXAMPLES, ROOT, WEIGHTS
 from tracking.utils import (
     download_mot_dataset,
     download_mot_eval_tools,
@@ -62,7 +62,7 @@ def trackeval(
     # Prepare arguments for subprocess call
     args = [
         sys.executable,
-        EXPERIMENTATION / "val_utils" / "scripts" / "run_mot_challenge.py",
+        EXAMPLES / "val_utils" / "scripts" / "run_mot_challenge.py",
         "--GT_FOLDER",
         str(gt_folder),
         "--BENCHMARK",
@@ -155,7 +155,10 @@ def parse_opt():
         help="filter by class: --classes 0, or --classes 0 2 3",
     )
     parser.add_argument(
-        "--project", default=ROOT / "runs" / "mot", help="save results to project/name"
+        "--project",
+        default=ROOT / "runs" / "mot",
+        type=Path,
+        help="save results to project/name",
     )
     parser.add_argument(
         "--name",
@@ -251,7 +254,7 @@ def run_trackeval(opt):
         opt = opt
         opt.exist_ok = False
 
-    val_tools_path = EXPERIMENTATION / "val_utils"
+    val_tools_path = EXAMPLES / "val_utils"
     download_mot_eval_tools(val_tools_path)
     zip_path = download_mot_dataset(val_tools_path, opt.benchmark)
     unzip_mot_dataset(zip_path, val_tools_path, opt.benchmark)

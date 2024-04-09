@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "boxmot"
-version = "10.0.52"
+version = "10.0.64"
 description = "BoxMOT: pluggable SOTA tracking modules for segmentation, object detection and pose estimation models"
 authors = ["Mikel Broström"]
 license = "AGPL-3.0"
@@ -44,6 +44,12 @@ torchvision = {version = "^0.17.1"}
 gitpython = "^3.1.42"
 
 
+[[tool.poetry.source]]
+name = "torchcpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.2"
 isort = "^5.13.2"
@@ -57,7 +63,7 @@ ultralytics = {path = "/Users/xiang/src/ultralytics", develop=true}
 [tool.poetry.group.export.dependencies]
 onnx = "^1.15.0"
 onnxsim = "^0.4.36"
-openvino-dev = "^2023.3.0"
+openvino-dev = ">=2023.3,<2025.0"
 
 
 [tool.poetry.group.evolve.dependencies]
