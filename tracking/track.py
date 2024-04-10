@@ -69,7 +69,7 @@ def run(args):
         conf=args.conf,
         iou=args.iou,
         agnostic_nms=args.agnostic_nms,
-        show=False,
+        show=args.show,
         stream=True,
         device=args.device,
         show_conf=args.show_conf,
@@ -102,15 +102,16 @@ def run(args):
     yolo.predictor.custom_args = args
 
     for r in results:
-        img = yolo.predictor.trackers[0].plot_results(
-            r.orig_img, args.show_trajectories
-        )
+        print(1)
+        # img = yolo.predictor.trackers[0].plot_results(
+        #     r.orig_img, args.show_trajectories
+        # )
 
-        if args.show is True:
-            cv2.imshow("BoxMOT", img)
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord(" ") or key == ord("q"):
-                break
+        # if args.show is True:
+        #     cv2.imshow("BoxMOT", img)
+        #     key = cv2.waitKey(1) & 0xFF
+        #     if key == ord(" ") or key == ord("q"):
+        #         break
 
 
 def parse_opt():
