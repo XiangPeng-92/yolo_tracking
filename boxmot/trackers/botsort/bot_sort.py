@@ -243,6 +243,8 @@ class BoTSORT(BaseTracker):
         self.cmc = SOF()
         self.fuse_first_associate = fuse_first_associate
 
+        self.crossing_dict = {}
+
     @PerClassDecorator
     def update(self, dets, img, timestamp, embs=None):
         assert isinstance(
